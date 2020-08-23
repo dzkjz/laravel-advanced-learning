@@ -17,3 +17,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 Route::get('/users', 'UserController@getIndex');
+Route::get('/cacheTest', 'UserController@cacheTest');
+
+Route::resource('', function () {
+})->parameters([])->names([
+    'create' => 'photos.build'
+])->scoped(['post' => 'slug'])->shallow();
