@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Contract\UserRepositoryInterface;
+use App\Models\Post;
 use http\Client\Curl\User;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Psy\VersionUpdater\GitHubChecker;
 
@@ -382,5 +386,58 @@ class UserController extends Controller
                 ->with('name', 'Victoria');
         } elseif ($variable === 6) {
         }
+
+    }
+
+    public function urlTest(Request $request)
+    {
+        $variable = '';
+        if ($variable === 1) {
+            $post = Post::find(1);
+            echo url("/posts/{$post->id}");
+            // http://example.com/posts/1
+        } elseif ($variable === 2) {
+            // If no path is provided to the url helper,
+            // a Illuminate\Routing\UrlGenerator instance is returned,
+            // allowing you to access information about the current URL:
+            echo url()->current();
+            echo url()->full();
+            echo url()->previous();
+
+            echo URL::current();
+            echo URL::full();
+            echo URL::previous(function () {
+
+            });
+        } elseif ($variable === 3) {
+            $post = Post::find(1);
+            echo route('post.show', ['post' => $post]);
+        } elseif ($variable === 4) {
+            echo route('comment.show', ['post' => 1, 'comment' => 3]);
+            // http://example.com/post/1/comment/3
+
+        } elseif ($variable === 5) {
+            // Laravel allows you to easily create "signed" URLs to named routes.
+            // These URLs have a "signature" hash appended to the query string which allows Laravel to
+            // verify that the URL has not been modified since it was created.
+            // Signed URLs are especially useful for routes that are publicly accessible yet need a layer of protection against URL manipulation.
+            return URL::signedRoute('unsubscribe', ['user' => 1]);
+        } elseif ($variable === 6) {
+            // If you would like to generate a temporary signed route URL that expires, you may use the temporarySignedRoute method:
+            return URL::temporarySignedRoute('unsubscribe', now()->addMinutes(30), ['user' => 1]);
+        } elseif ($variable === 7) {
+            // The action function generates a URL for the given controller action.
+            // You do not need to pass the full namespace of the controller.
+            // Instead, pass the controller class name relative to the App\Http\Controllers namespace:
+            $url = action('HomeController@index');
+        } elseif ($variable === 8) {
+            // You may also reference actions with a "callable" array syntax:
+            $url = action([UserController::class, 'index']);
+        } elseif ($variable === 9) {
+            // If the controller method accepts route parameters,
+            // you may pass them as the second argument to the function:
+            $url = action('HomeController@profile', ['id' => 1]);
+        }
+
     }
 }
