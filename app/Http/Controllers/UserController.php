@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Contract\UserRepositoryInterface;
+use http\Client\Curl\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\View;
+use Psy\VersionUpdater\GitHubChecker;
 
 class UserController extends Controller
 {
@@ -183,6 +185,153 @@ class UserController extends Controller
         $request->file('photo')->storeAs('images', $custom_file_name);
         $request->file('photo')->storeAs('images', $custom_file_name, 's3');
 
+
+    }
+
+    public function responseTest(Request $request)
+    {
+        $variable = 0;
+        $type = 'text/plain';
+        $minutes = 10;
+        if ($variable === 1) {
+            return response('Hello world', 200)
+                ->header('Content-Type', 'text/plain');
+        } elseif ($variable === 2) {
+
+            return response('Hello world', 200)
+                ->withHeaders([
+                    'X-Header-One' => 'Header Value',
+                    'X-Header-Two' => 'Header Value',
+                    'Content-Type' => $type,
+                ])
+                ->header('Whatever', 'SomeValue');
+        } elseif ($variable === 3) {
+            return response($variable)
+                ->header('Content-Type', $type)
+                ->cookie('name', 'value', $minutes);
+        } elseif ($variable === 4) {
+            return redirect('home/dashboard');
+        } elseif ($variable === 5) {
+            return back()->withInput();
+        } elseif ($variable === 6) {
+            return redirect()->route('login');
+        } elseif ($variable === 7) {
+            // For a route with the following URI: profile/{id}
+            return redirect()->route('profile', ['id' => 1]);
+        } elseif ($variable === 8) {
+            $user = \App\User::find(1);
+
+            //If you are redirecting to a route with an "ID" parameter that is being populated from an Eloquent model,
+            // you may pass the model itself.
+            // The ID will be extracted automatically:
+
+            // For a route with the following URI: profile/{id}
+
+            return redirect()->route('profile', [$user]);
+        } elseif ($variable === 9) {
+            $user = \App\User::find(1);
+            //If you are redirecting to a route with an "ID" parameter that is being populated from an Eloquent model,
+            // you may pass the model itself.
+            // The ID will be extracted automatically:
+
+            // For a route with the following URI: profile/{id:slug}
+            return redirect()->route('profle', [$user]);
+
+            //or you can override the getRouteKey method on your Eloquent model:
+            //
+            ///**
+            // * Get the value of the model's route key.
+            // *
+            // * @return mixed
+            // */
+            //public function getRouteKey()
+            //{
+            //    return $this->slug;
+            //}
+        } elseif ($variable === 10) {
+            //You may also generate redirects to controller actions.
+            // To do so, pass the controller and action name to the action method.
+            return redirect()->action('HomeController@index');
+        } elseif ($variable === 11) {
+
+            //If your controller route requires parameters,
+            // you may pass them as the second argument to the action method:
+            return redirect()->action(
+                'UserController@profle',
+                ['id' => 2]
+            );
+        } elseif ($variable === 12) {
+            // Sometimes you may need to redirect to a domain outside of your application.
+            // You may do so by calling the away method,
+            // which creates a RedirectResponse without any additional URL encoding, validation, or verification:
+            return redirect()->away('https://www.google.com');
+        } elseif ($variable === 13) {
+            return redirect('dashboard')
+                ->with('status', 'Profile updated!');
+            // After the user is redirected, you may display the flashed message from the session. For example, using Blade syntax:
+            //
+            //@if (session('status'))
+            //    <div class="alert alert-success">
+            //        {{ session('status') }}
+            //    </div>
+            //@endif
+        } elseif ($variable === 14) {
+            $data = '';
+            return response()
+                // When the response helper is called without arguments,
+                // an implementation of the Illuminate\Contracts\Routing\ResponseFactory contract is returned.
+                // This contract provides several helpful methods for generating responses.
+                ->view('hello', $data, 200)
+                // Of course, if you do not need to pass a custom HTTP status code or custom headers,
+                // you should use the global view helper function.
+                ->header('Content-Type', $type);
+            // Of course, if you do not need to pass a custom HTTP status code or custom headers, you should use the global view helper function.
+        } elseif ($variable === 15) {
+            // The json method will automatically set the Content-Type header to application/json,
+            // as well as convert the given array to JSON using the json_encode PHP function:
+            return response()->json([
+                'name' => 'Abigail',
+                'state' => 'CA'
+            ]);
+        } elseif ($variable === 16) {
+            // If you would like to create a JSONP response,
+            // you may use the json method in combination with the withCallback method:
+            return response()
+                ->json(['name' => 'Abigail', 'state' => 'CA'])
+                ->withCallback($request->input('callback'));
+        } elseif ($variable === 17) {
+            // The download method may be used to generate a response that forces the user's browser to download the file at the given path.
+            // The download method accepts a file name as the second argument to the method,
+            // which will determine the file name that is seen by the user downloading the file.
+            // Finally, you may pass an array of HTTP headers as the third argument to the method:
+            $pathToFile = '';
+            // Symfony HttpFoundation, which manages file downloads, requires the file being downloaded to have an ASCII file name.
+            $name = '';
+            $headers = ['a' => '1'];
+//            return response()->download($pathToFile);
+//            return response()->download($pathToFile, $name, $headers);
+            return response()->download($pathToFile, $name, $headers)->deleteFileAfterSend();
+//            return response()->download($pathToFile)->deleteFileAfterSend();
+        } elseif ($variable === 18) {
+
+            // Sometimes you may wish to turn the string response of a given operation into a downloadable response without having to write the contents of the operation to disk.
+            // You may use the streamDownload method in this scenario.
+            // This method accepts a callback, file name, and an optional array of headers as its arguments:
+
+            return response()->streamDownload(function () {
+                echo GitHub::api('repo')
+                    ->contents()
+                    ->readme('laravel', 'laravel')['contents'];
+            }, 'laravel-readme.md');
+        } elseif ($variable === 19) {
+            // The file method may be used to display a file, such as an image or PDF, directly in the user's browser instead of initiating a download.
+            // This method accepts the path to the file as its first argument and an array of headers as its second argument:
+            $pathToFile = '';
+            $headers = ['a' => '1'];
+            return response()->file($pathToFile, $headers);
+        } elseif ($variable === 20) {
+            return response()->caps('foo');
+        }
 
     }
 }
