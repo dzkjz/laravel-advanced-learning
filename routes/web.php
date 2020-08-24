@@ -19,7 +19,7 @@ Route::get('/', function () {
 Route::get('/users', 'UserController@getIndex');
 Route::get('/cacheTest', 'UserController@cacheTest');
 
-Route::resource('', function () {
-})->parameters([])->names([
-    'create' => 'photos.build'
-])->scoped(['post' => 'slug'])->shallow();
+//Route::resource('', function () {
+//})->parameters([])->names([
+//    'create' => 'photos.build'
+//])->scoped(['post' => 'slug'])->shallow();

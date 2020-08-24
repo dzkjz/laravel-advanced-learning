@@ -177,6 +177,8 @@ return [
 
         \App\Providers\RepositoryServiceProvider::class,
         \App\Providers\BillServiceProvider::class,
+
+        \App\Providers\ViewServiceProvider::class,
     ],
 
     /*

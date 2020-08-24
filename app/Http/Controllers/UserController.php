@@ -334,4 +334,53 @@ class UserController extends Controller
         }
 
     }
+
+    public function viewsTest(Request $request)
+    {
+        $variable = '';
+        if ($variable === 1) {
+            // Since this view is stored at resources/views/greeting.blade.php,
+            // we may return it using the global view helper like so:
+            return \view('greeting', ['name' => 'JimmyT']);
+            // As you can see, the first argument passed to the view helper corresponds
+            // to the name of the view file in the resources/views directory.
+
+            // The second argument is an array of data that should be made available to the view.
+            // In this case, we are passing the name variable, which is displayed in the view using Blade syntax.
+        } elseif ($variable === 2) {
+            $data = ['name' => 'Cathy', 'age' => '22'];
+            // Views may also be nested within subdirectories of the resources/views directory.
+            // "Dot" notation may be used to reference nested views.
+            // For example, if your view is stored at resources/views/admin/profile.blade.php, you may reference it like so:
+
+            return \view('admin.profile', $data);
+            // View directory names should not contain the . character.
+        } elseif ($variable === 3) {
+            if (View::exists('emails.customer')) {
+                // If you need to determine if a view exists, you may use the View facade.
+                // The exists method will return true if the view exists:
+            } else {
+                $data = ['name' => 'Cathy', 'age' => '22'];
+                // Using the first method, you may create the first view that exists in a given array of views.
+                // This is useful if your application or package allows views to be customized or overwritten:
+//                return view()->first(['custom.admin', 'admin'], $data);
+                // You may also call this method via the View facade:
+                return View::first(['custom.admin', 'admin'], $data, []);
+            }
+
+        } elseif ($variable === 4) {
+            // As you saw in the previous examples, you may pass an array of data to views:
+            return \view('greetings', ['name' => 'Victoria']);
+            // When passing information in this manner,
+            // the data should be an array with key / value pairs.
+            // Inside your view, you can then access each value using its corresponding key, such as <?php echo $key; /?/>.
+        } elseif ($variable === 5) {
+
+            // As an alternative to passing a complete array of data to the view helper function,
+            // you may use the with method to add individual pieces of data to the view:
+            return view('greeting')
+                ->with('name', 'Victoria');
+        } elseif ($variable === 6) {
+        }
+    }
 }
