@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Extensions\MongoSessionHandler;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\View;
 
@@ -46,5 +48,16 @@ class AppServiceProvider extends ServiceProvider
         // You are free to add them to the AppServiceProvider or generate a separate service provider to house them:
         \Illuminate\Support\Facades\View::share('wow', 'this is amazing, i am the shared value');
 
+
+        // Once your driver has been implemented, you are ready to register it with the framework.
+        // To add additional drivers to Laravel's session backend, you may use the extend method on the Session facade.
+        // You should call the extend method from the boot method of a service provider.
+        // You may do this from the existing AppServiceProvider or create an entirely new provider:
+        Session::extend('mongo', function ($app) {
+            // Return implementation of SessionHandlerInterface...
+            return new MongoSessionHandler;
+            // Once the session driver has been registered,
+            // you may use the mongo driver in your config/session.php configuration file.
+        });
     }
 }

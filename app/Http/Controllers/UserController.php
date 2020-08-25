@@ -440,4 +440,93 @@ class UserController extends Controller
         }
 
     }
+
+    public function sessionTest(Request $request)
+    {
+        $var = '';
+        if ($var === 1) {
+            $session_one = $request->session()
+                ->get(
+                    'se_one',
+                    'defaultVal'//This default value will be returned if the specified key does not exist in the session.
+                );
+        } elseif ($var === 2) {
+            $session_two = $request->session()
+                ->get(
+                    'se_two',
+                    function () {
+                        //If you pass a Closure as the default value to the get method and the requested key does not exist,
+                        //the Closure will be executed and its result returned:
+                        return 'defaultVal_Two';
+                    }
+                );
+        } elseif ($var === 3) {
+            $data = $request->session()->all();
+        } elseif ($var === 4) {
+            $exists = $request->session()->has('key');
+        } elseif ($var === 5) {
+            // To store data in the session, you will typically use the put method or the session helper:
+            $data = ['key_1' => 'val_1'];
+            $request->session()->put($data);
+            $request->session()->put('key_2', 'val_2');
+
+
+            session($data);
+        } elseif ($var === 6) {
+            // The push method may be used to push a new value onto a session value that is an array.
+            // For example, if the user.teams key contains an array of team names,
+            // you may push a new value onto the array like so:
+            $request->session()->push('user.teams', 'developers');
+        } elseif ($var === 7) {
+            // The pull method will retrieve and delete an item from the session in a single statement:
+            $value = $request->session()->pull('key', 'default');
+        } elseif ($var === 8) {
+            // Sometimes you may wish to store items in the session only for the next request.
+            // You may do so using the flash method.
+            // Data stored in the session using this method will be available immediately and during the subsequent HTTP request.
+            // After the subsequent HTTP request, the flashed data will be deleted.
+            // Flash data is primarily useful for short-lived status messages:
+            $request->session()->flash('status', 'Task was successful!');
+        } elseif ($var === 9) {
+            // If you need to keep your flash data around for several requests,
+            // you may use the reflash method,
+            // which will keep all of the flash data for an additional request.
+            $request->session()->reflash();
+            // If you only need to keep specific flash data, you may use the keep method:
+            $request->session()->keep(['username', 'email']);
+        } elseif ($var === 10) {
+            // The forget method will remove a piece of data from the session.
+            $request->session()->forget('key_1');
+            // Forget multiple keys...
+            $request->session()->forget(['key_1', 'key_2']);
+            //  If you would like to remove all data from the session, you may use the flush method:
+            $request->session()->flush();
+        } elseif ($var === 11) {
+            // Regenerating the session ID is often done in order to prevent malicious users
+            // from exploiting a session fixation attack on your application.
+
+            // Laravel automatically regenerates the session ID during authentication if you are using the built-in LoginController;
+            // however, if you need to manually regenerate the session ID, you may use the regenerate method.
+
+            $request->session()->regenerate();
+        } elseif ($var === 12) {
+            // To utilize session blocking, your application must be using a cache driver that supports atomic locks.
+            // Currently, those cache drivers include the memcached, dynamodb, redis, and database drivers.
+            // In addition, you may not use the cookie session driver.
+
+            // 翻译：默认laravel是允许请求使用同一个session来同步执行的，比如你用js在执行两个HTTP请求的时候，假定此两个请求是同时执行的，对于很多应用
+            // 这种情况很常见也不会有问题，但是session数据丢包在小部分情况下也是会存在的，比如正在对应用的两个不同的endpoints执行请求，那么就会执行两个
+            // session写操作。
+
+            // To mitigate this, Laravel provides functionality that allows you to limit concurrent requests for a given session.
+            // To get started, you may simply chain the block method onto your route definition.
+            // In this example, an incoming request to the /profile endpoint would acquire a session lock.
+            // While this lock is being held,
+            // any incoming requests to the /profile or /order endpoints which share the same session ID
+            // will wait for the first request to finish executing before continuing their execution:
+
+
+        }
+
+    }
 }
