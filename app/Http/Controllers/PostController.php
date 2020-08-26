@@ -324,4 +324,18 @@ class PostController extends Controller
             return false;
         };
     }
+
+    public function isValid($value)
+    {
+        // Sometimes you may need to report an exception but continue handling the current request.
+        // The report helper function allows you to quickly report an exception
+        // using your exception handler's report method without rendering an error page:
+        try {
+            // Validate the value
+        } catch (\Throwable $e) {
+            report($e);
+
+            return false;
+        }
+    }
 }
