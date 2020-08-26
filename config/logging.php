@@ -35,7 +35,7 @@ return [
     */
 
     'channels' => [
-        'stack' => [
+        'stack' => [ // the stack driver allows you to combine multiple channels into a single log channel
             'driver' => 'stack',
             'channels' => ['single'],
             'ignore_exceptions' => false,
@@ -45,6 +45,9 @@ return [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
             'level' => 'debug',
+            // The tap array should contain a list of classes that should have
+            // an opportunity to customize (or "tap" into) the Monolog instance after it is created:
+            'tap' => [App\Logging\CustomizeFormatter::class],
         ],
 
         'daily' => [
@@ -99,6 +102,48 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+        // If you would like to define an entirely custom channel in which
+        // you have full control over Monolog's instantiation and configuration,
+        // you may specify a custom driver type in your config/logging.php configuration file.
+        // Your configuration should include a via option to point to the factory
+        // class which will be invoked to create the Monolog instance:
+        'custom' => [
+            'driver' => 'custom',
+            'via' => App\Logging\CreateCustomLogger::class,
+        ],
+        'logentries' => [
+            // Monolog has a variety of available handlers.
+            // In some cases,
+            // the type of logger you wish to create is merely a Monolog driver with an instance of a specific handler.
+            // These channels can be created using the monolog driver.
+            'driver' => 'monolog',
+            // When using the monolog driver,
+            // the handler configuration option is used to specify which handler will be instantiated.
+            'handler' => Monolog\Handler\SyslogUdpHandler::class,
+            // Optionally, any constructor parameters the handler needs may be specified using the with configuration option:
+            'with' => [
+                'host' => 'my.logentries.internal.datahubhost.company.com',
+                'port' => '10000',
+            ]
+        ],
+        'browser' => [
+            'driver' => 'monolog',
+            // When using the monolog driver, the Monolog LineFormatter will be used as the default formatter.
+            'handler' => Monolog\Handler\BrowserConsoleHandler::class,
+            // However, you may customize the type of formatter passed to the handler
+            // using the formatter and formatter_with configuration options:
+            'formatter' => Monolog\Formatter\HtmlFormatter::class,
+            'formatter_with' => [
+                'dateFormat' => 'Y-m-d',
+            ]
+        ],
+        'newrelic' => [
+            'driver' => 'monolog',
+            // If you are using a Monolog handler that is capable of providing its own formatter,
+            'handler' => Monolog\Handler\NewRelicHandler::class,
+            // you may set the value of the formatter configuration option to default:
+            'formatter' => 'default',
+        ]
     ],
 
 ];

@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreBlogPost;
 use App\Rules\UpperCase;
+use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class PostController extends Controller
@@ -320,6 +322,7 @@ class PostController extends Controller
 
     private function somethingElseIsInvalid()
     {
+
         return function () {
             return false;
         };
@@ -336,6 +339,33 @@ class PostController extends Controller
             report($e);
 
             return false;
+        }
+    }
+
+    public function showProfile($id)
+    {
+        $var = '';
+        if ($var === 1) {
+            Log::info('Showing user profile for user: ' . $id);
+
+            $user = User::findOrFail($id);
+
+            Log::info('User failed to login.', ['id' => $user->id]);
+
+            return view('user.profile', ['user' => $user]);
+        } elseif ($var === 2) {
+
+            // Sometimes you may wish to log a message to a channel other than your application's default channel.
+            // You may use the channel method on the Log facade to retrieve
+            // and log to any channel defined in your configuration file:
+
+            Log::channel('slack')->info('Something happened!');
+        } elseif ($var === 3) {
+
+            // If you would like to create an on-demand logging stack
+            // consisting of multiple channels, you may use the stack method:
+
+            Log::stack(['single', 'slack'])->info('Something happened!');
         }
     }
 }
