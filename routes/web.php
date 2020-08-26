@@ -96,5 +96,6 @@ Route::post('/order', function () {
     // will wait a maximum of 10 seconds while attempting to obtain a lock:
     );
 
+Route::get('/post/create', 'PostController@create');
 
-
+Route::post('post', 'PostController@store');

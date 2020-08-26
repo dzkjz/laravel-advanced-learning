@@ -134,6 +134,20 @@ return [
             'rule-name' => 'custom-message',
         ],
     ],
+    //'custom' => [
+    //    'email' => [
+    //        'required' => 'We need to know your e-mail address!',
+    //    ],
+    //],
+
+
+    // Likewise, you may use the * character when specifying your validation messages in your language files,
+    // making it a breeze to use a single validation message for array based fields:
+    //'custom' => [
+    //    'person.*.email' => [
+    //        'unique' => 'Each person must have a unique e-mail address',
+    //    ]
+    //],
 
     /*
     |--------------------------------------------------------------------------
@@ -147,5 +161,32 @@ return [
     */
 
     'attributes' => [],
+    // If you would like the :attribute portion of your validation message to be replaced with a custom attribute name,
+    // you may specify the custom name in the attributes array of your resources/lang/xx/validation.php language file:
 
+    //'attributes' => [
+    //    'email' => 'email address',
+    //],
+
+
+    // Instead of displaying cc as the payment type value,
+    // you may specify a custom value representation in your validation language file by defining a values array:
+    'values' => [
+        'payment_type' =>
+            [
+                'cc' => 'credit card',
+                // Now if the validation rule fails it will produce the following message:
+                // The credit card number field is required when payment type is credit card.
+            ],
+    ],
+
+
+    // You will also need to define an error message for your custom rule.
+    // You can do so either using an inline custom message array or by adding an entry in the validation language file.
+    // This message should be placed in the first level of the array,
+    // not within the custom array, which is only for attribute-specific error messages:
+
+    "foo" => "Your input was invalid!",
+
+    // The rest of the validation error messages...
 ];
