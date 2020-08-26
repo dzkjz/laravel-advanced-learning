@@ -6,6 +6,7 @@ use App\Http\Requests\StoreBlogPost;
 use App\Rules\UpperCase;
 use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -367,5 +368,12 @@ class PostController extends Controller
 
             Log::stack(['single', 'slack'])->info('Something happened!');
         }
+    }
+
+    public function localeTest()
+    {
+        App::getLocale();
+        App::setLocale();
+
     }
 }
