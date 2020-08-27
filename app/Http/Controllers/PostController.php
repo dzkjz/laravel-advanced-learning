@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreBlogPost;
+use App\Models\Post;
 use App\Rules\UpperCase;
-use App\User;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Gate;
@@ -480,6 +481,114 @@ class PostController extends Controller
         // Similar to the before check,
         // if the after callback returns a non-null result that result will be considered the result of the check.
 
+    }
+
+    public function policyResponses(Post $post)
+    {
+        // When returning an authorization response from your policy,
+        // the Gate::allows method will still return a simple boolean value;
+        // however, you may use the Gate::inspect method to get the full authorization response returned by the gate:
+        $response = Gate::inspect('update', $post);
+
+        if ($response->allowed()) {
+            // The action is authorized...
+
+        } else {
+            echo $response->message();
+        }
+        // Of course, when using the Gate::authorize method to throw an AuthorizationException if the
+        // action is not authorized, the error message provided by the authorization
+        // response will be propagated to the HTTP response:
+        //
+        Gate::authorize('update', $post);
+
+        // The action is authorized...
+    }
+
+    public function updatePost(Request $request, Post $post)
+    {
+        $user = $request->user();
+
+        // The User model that is included with your Laravel application
+        // includes two helpful methods for authorizing actions: can and cant.
+        // The can method receives the action you wish to authorize and the relevant model.
+        // For example, let's determine if a user is authorized to update a given Post model:
+
+        if ($user->can('update', $post)) {
+            //
+        }
+
+        // If a policy is registered for the given model,
+        // the can method will automatically call the appropriate policy and return the boolean result.
+        // If no policy is registered for the model,
+        // the can method will attempt to call the Closure based Gate matching the given action name.
+
+
+        // Remember, some actions like create may not require a model instance.
+        // In these situations, you may pass a class name to the can method.
+
+
+        if (
+        $user->can(
+            'create',
+            Post::class  //The class name will be used to determine which policy to use when authorizing the action:
+        )
+        ) {
+            // Executes the "create" method on the relevant policy...
+        }
+
+        // In addition to helpful methods provided to the User model,
+        // Laravel provides a helpful authorize method to any of your controllers
+        // which extend the App\Http\Controllers\Controller base class.
+        // Like the can method, this method accepts the name of the action you wish to authorize and the relevant model.
+        $this->authorize('update', $post);
+        // If the action is not authorized,
+        // the authorize method will throw an Illuminate\Auth\Access\AuthorizationException,
+        // which the default Laravel exception handler will convert to an HTTP response with a 403 status code:
+
+
+        // As previously discussed, some actions like create may not require a model instance.
+        // In these situations, you should pass a class name to the authorize method.
+        // The class name will be used to determine which policy to use when authorizing the action:
+        $this->authorize('create', Post::class);
+
+
+        // If you are utilizing resource controllers,
+        // you may make use of the authorizeResource method in the controller's constructor.
+        // This method will attach the appropriate can middleware definitions to the resource controller's methods.
+
+        // The authorizeResource method accepts the model's class name as its first argument,
+        // and the name of the route / request parameter that will contain the model's ID as its second argument.
+
+//        $this->authorizeResource(Post::class, 'post');
+
+        // You should ensure your resource controller is created with the --model flag
+        // to have the required method signatures and type hints: https://laravel.com/docs/master/authorization#via-controller-helpers
+
+
+        // You may use the make:policy command with the --model option to quickly
+        // generate a policy class for a given model: php artisan make:policy PostPolicy --model=Post.
+
+
+    }
+
+    /**
+     *  When authorizing actions using policies,
+     * you may pass an array as the second argument to the various authorization functions and helpers.
+     * The first element in the array will be used to determine which policy should be invoked,
+     * while the rest of the array elements are passed as parameters to the policy method and
+     * can be used for additional context when making authorization decisions.
+     * For example,
+     * consider the following PostPolicy method definition which contains an additional $category parameter:
+     */
+    public function updateSupplyingAdditionalContext(Request $request, Post $post)
+    {
+        // When attempting to determine if the authenticated user can update a given post,
+        // we can invoke this policy method like so:
+
+        $this->authorize('updateSupplyingAdditionalContext', [$post, $request->input('category')]);
+
+        // The current user can update the blog post...
     }
 
 

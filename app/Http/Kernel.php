@@ -75,7 +75,13 @@ class Kernel extends HttpKernel
         'auth.basic.once' => \App\Http\Middleware\AuthenticateOnceWithBasicAuth::class,
         'bindings' => \Illuminate\Routing\Middleware\SubstituteBindings::class,
         'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
+
+        // Laravel includes a middleware that can authorize actions before the
+        // incoming request even reaches your routes or controllers.
+        // By default, the Illuminate\Auth\Middleware\Authorize middleware
+        // is assigned the can key in your App\Http\Kernel class.
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
+
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
 
         // By default, after confirming their password,

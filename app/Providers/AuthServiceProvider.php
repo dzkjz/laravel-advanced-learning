@@ -2,10 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\Post;
 use App\Models\User;
 use App\Policies\PostPolicy;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
@@ -18,6 +21,12 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         // 'App\Model' => 'App\Policies\ModelPolicy',
+        // Once the policy exists, it needs to be registered.
+        // The AuthServiceProvider included with fresh Laravel applications contains a policies property
+        // which maps your Eloquent models to their corresponding policies.
+        // Registering a policy will instruct Laravel which policy to
+        // utilize when authorizing actions against a given model:
+        Post::class => PostPolicy::class,
     ];
 
     /**
