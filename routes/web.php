@@ -129,3 +129,4 @@ Route::post('/post', function () {
     ->middleware('can:create,App\Models\Post');
 // In these situations, you may pass a class name to the middleware.
 // The class name will be used to determine which policy to use when authorizing the action:
+
