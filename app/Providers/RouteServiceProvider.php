@@ -18,7 +18,8 @@ class RouteServiceProvider extends ServiceProvider
 
     /**
      * The path to the "home" route for your application.
-     *
+     * When a user is successfully authenticated, they will be redirected to the /home URI.
+     * You can customize the post-authentication redirect path using the HOME constant defined in your RouteServiceProvider:
      * @var string
      */
     public const HOME = '/home';

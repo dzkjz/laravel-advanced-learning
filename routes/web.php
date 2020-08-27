@@ -99,3 +99,7 @@ Route::post('/order', function () {
 Route::get('/post/create', 'PostController@create');
 
 Route::post('post', 'PostController@store');
+
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');

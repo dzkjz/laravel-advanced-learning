@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\AuthenticateOnceWithBasicAuth;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Routing\Middleware\ValidateSignature;
 
@@ -34,7 +35,22 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
-            // \Illuminate\Session\Middleware\AuthenticateSession::class,
+
+
+            // Laravel also provides a mechanism for invalidating and "logging out" a user's sessions
+            // that are active on other devices without invalidating the session on their current device.
+            // This feature is typically utilized when a user is changing or updating their password and
+            // you would like to invalidate sessions on other devices while keeping the current device authenticated.
+            //
+            // Before getting started, you should make sure that the Illuminate\Session\Middleware\AuthenticateSession
+            // middleware is present and un-commented in your app/Http/Kernel.php class' web middleware group:
+            \Illuminate\Session\Middleware\AuthenticateSession::class,
+
+            // When using the AuthenticateSession middleware in combination with a custom route name for the login route,
+            // you must override the unauthenticated method on your application's exception handler
+            // to properly redirect users to your login page.
+
+
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
@@ -56,11 +72,18 @@ class Kernel extends HttpKernel
     protected $routeMiddleware = [
         'auth' => \App\Http\Middleware\Authenticate::class,
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+        'auth.basic.once' => \App\Http\Middleware\AuthenticateOnceWithBasicAuth::class,
         'bindings' => \Illuminate\Routing\Middleware\SubstituteBindings::class,
         'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+
+        // By default, after confirming their password,
+        // the user will not have to confirm their password again for three hours.
+        // You are free to customize the length of time before the user must
+        // re-confirm their password using the auth.password_timeout configuration option.
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
+
         // Alternatively, you may assign the Illuminate\Routing\Middleware\ValidateSignature middleware to the route.
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
