@@ -28,6 +28,7 @@ class ResetPasswordController extends Controller
      * @var string
      */
     protected $redirectTo = RouteServiceProvider::HOME;
+//    protected $redirectTo = '/dashboard';
 
     /**
      *  You may also customize the "guard" that is used to authenticate and register users.
