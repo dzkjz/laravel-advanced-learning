@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -561,12 +562,61 @@ class UserController extends Controller
         // If the value can not be properly decrypted,
         // such as when the MAC is invalid,
         // an Illuminate\Contracts\Encryption\DecryptException will be thrown:
-        
+
         try {
             $decrypted = Crypt::decryptString($encryptedValue);
         } catch (DecryptException $e) {
             //
 
+        }
+    }
+
+    /**
+     * Update the password for the user.
+     * @param Request $request
+     */
+    public function hashingUsage(Request $request)
+    {
+        $request->user()->fill(
+            [
+                'password' => Hash::make($request->newPassword,
+                    // Adjusting The Bcrypt Work Factor
+                    // If you are using the Bcrypt algorithm, the make method allows you
+                    // to manage the work factor of the algorithm using the rounds option;
+                    // however, the default is acceptable for most applications:
+                    [
+                        'rounds' => 12,
+                    ]
+                ),
+            ]
+        )->save();
+
+        // Adjusting The Argon2 Work Factor
+        // If you are using the Argon2 algorithm,
+        // the make method allows you to manage the work factor of the algorithm
+        // using the memory, time, and threads options; however,
+        // the defaults are acceptable for most applications:
+
+        $hashed = Hash::make('password', [
+            'memory' => 1024,
+            'time' => 2,
+            'threads' => 2,
+        ]);
+
+        // The check method allows you to verify that a given plain-text string corresponds to a given hash.
+        // However, if you are using the LoginController included with Laravel,
+        // you will probably not need to use this directly,
+        // as this controller automatically calls this method:
+
+        if (Hash::check('plain-text', $hashed)) {
+            // The passwords match...
+        }
+
+        // The needsRehash function allows you to determine if the work factor
+        // used by the hasher has changed since the password was hashed:
+
+        if (Hash::needsRehash($hashed)) {
+            $hashed = Hash::make('plain-text');
         }
     }
 }
