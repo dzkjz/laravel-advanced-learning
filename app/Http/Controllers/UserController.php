@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Contract\UserRepositoryInterface;
 use App\Models\Post;
 use http\Client\Curl\User;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -533,5 +535,38 @@ class UserController extends Controller
     public function validationTest(Request $request)
     {
 
+    }
+
+    /**
+     * Store a secret message for the user.
+     * @param Request $request
+     * @param $id
+     */
+    public function encryptionTest(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $user->fill(
+            [
+                'secret' => Crypt::encryptString($request->secret),
+            ]
+        )->save();
+    }
+
+    /**
+     * @param $encryptedValue
+     */
+    public function decryptValue($encryptedValue)
+    {
+        // If the value can not be properly decrypted,
+        // such as when the MAC is invalid,
+        // an Illuminate\Contracts\Encryption\DecryptException will be thrown:
+        
+        try {
+            $decrypted = Crypt::decryptString($encryptedValue);
+        } catch (DecryptException $e) {
+            //
+
+        }
     }
 }
