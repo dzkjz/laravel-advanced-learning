@@ -46,6 +46,8 @@ class ProfileController extends Controller
         // the user's other sessions will be invalidated entirely,
         // meaning they will be "logged out" of all guards they were previously authenticated by.
 
-
+        // When using the AuthenticateSession middleware in combination with a custom route name for the login route,
+        // you must override the unauthenticated method on your application's exception handler
+        // to properly redirect users to your login page.
     }
 }

@@ -7,6 +7,7 @@ use App\Rules\UpperCase;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -376,4 +377,110 @@ class PostController extends Controller
         App::setLocale();
 
     }
+
+    public function authorizingActions($post)
+    {
+        // To authorize an action using gates, you should use the allows or denies methods.
+        // Note that you are not required to pass the currently authenticated user to these methods.
+        // Laravel will automatically take care of passing the user into the gate Closure:
+        if (Gate::allows('edit-settings')) {
+            // The Current user can edit settings
+        }
+        if (Gate::allows('update-post', $post)) {
+            // The Current user can update the post
+        }
+
+        if (Gate::denies('update-post', $post)) {
+            // The current user can't update the post
+        }
+
+        // If you would like to determine if a particular user is authorized to perform an action,
+        // you may use the forUser method on the Gate facade:
+        $user = \App\Models\User::find(1);
+        if (Gate::forUser($user)->allows('update-post', $post)) {
+            // The $user can update the post...
+        }
+
+        if (Gate::forUser($user)->denies('update-post', $post)) {
+            // The $user can't update the post...
+        }
+
+        // You may authorize multiple actions at a time with the any or none methods:
+        if (Gate::any(['update-post', 'delete-post'], $post)) {
+            // The current user can update or delete post...
+        }
+
+        if (Gate::none(['update-post', 'delete-post'], $post)) {
+            // Current user can't update and delete post...
+        }
+
+        // If you would like to attempt to authorize an action and automatically throw an
+        // Illuminate\Auth\Access\AuthorizationException if the user is not allowed to perform the given action,
+        // you may use the Gate::authorize method.
+        // Instances of AuthorizationException are automatically converted to 403 HTTP response:
+        Gate::authorize('update-post', $post);
+        // The action is authorized...
+
+
+        // The gate methods for authorizing abilities (allows, denies, check, any, none, authorize, can, cannot)
+        // and the authorization Blade directives (@can, @cannot, @canany) can receive an array as the second argument.
+        // These array elements are passed as parameters to gate,
+        // and can be used for additional context when making authorization decisions:
+
+        $category = [];
+        $extraFlag = true;
+        if (Gate::check('create-post', [$category, $extraFlag])) {
+            // The user can create the post...
+        }
+
+    }
+
+    public function gateResponses($post)
+    {
+        // When returning an authorization response from your gate,
+        // the Gate::allows method will still return a simple boolean value;
+        // however, you may use the Gate::inspect method to get the full authorization response returned by the gate:
+        $response = Gate::inspect('edit-settings', $post);
+
+        if ($response->allowed()) {
+            // The action is authorized...
+        } else {
+            echo $response->message();
+        }
+
+        // Of course, when using the Gate::authorize method to
+        // throw an AuthorizationException if the action is not authorized,
+        // the error message provided by the authorization response will be propagated to the HTTP response:
+
+        Gate::authorize('edit-settings', $post);
+
+        // The action is authorized...
+
+    }
+
+
+    public function interceptionGateChecks()
+    {
+        // Sometimes, you may wish to grant all abilities to a specific user.
+        // You may use the before method to define a callback that is run before all other authorization checks:
+        Gate::before(function ($user, $ability) {
+            if ($user->isSuperAdmin()) {
+                return true;
+            }
+        });
+        // If the before callback returns a non-null result that result will be considered the result of the check.
+
+        // You may use the after method to define a callback to be executed after all other authorization checks:
+        Gate::after(function ($user, $ability, $result, $arguments) {
+            if ($user->isSuperAdmin()) {
+                return true;
+            }
+        });
+
+        // Similar to the before check,
+        // if the after callback returns a non-null result that result will be considered the result of the check.
+
+    }
+
+
 }

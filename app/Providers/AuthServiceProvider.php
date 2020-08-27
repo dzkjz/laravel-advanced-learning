@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Policies\PostPolicy;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -63,6 +65,7 @@ class AuthServiceProvider extends ServiceProvider
         //],
         $this->addingCustomUserProviders();
 
+        $this->writingGates();
 
     }
 
@@ -99,4 +102,58 @@ class AuthServiceProvider extends ServiceProvider
         //],
 
     }
+
+    public function writingGates()
+    {
+        // Gates always receive a user instance as their first argument,
+        // and may optionally receive additional arguments such as a relevant Eloquent model:
+        Gate::define('edit-settings', function ($user) {
+            return $user->isAdmin;
+        });
+
+        Gate::define('update-post', function ($user, $post) {
+            return $user->id === $post->user_id;
+        });
+
+        // Gates may also be defined using a Class@method style callback string, like controllers:
+        Gate::define('delete-post', 'App\Policies\PostPolicy@delete');
+
+
+        // The gate methods for authorizing abilities (allows, denies, check, any, none, authorize, can, cannot)
+        // and the authorization Blade directives (@can, @cannot, @canany) can receive an array as the second argument.
+        // These array elements are passed as parameters to gate,
+        // and can be used for additional context when making authorization decisions:
+
+        Gate::define('create-post', function ($user, $category, $extraFlag) {
+            return $category->group > 3 && $extraFlag === true;
+        });
+    }
+
+    /**
+     * Sometimes you may wish to return a more detailed response,
+     * including an error message.
+     * To do so, you may return a Illuminate\Auth\Access\Response from your gate:
+     */
+    public function gateResponses()
+    {
+        Gate::define('edit-settings', function ($user) {
+            return $user->isAdmin
+                ? Response::allow()
+                : Response::deny('You must be a super administrator');
+        });
+
+        // When returning an authorization response from your gate,
+        // the Gate::allows method will still return a simple boolean value;
+        // however, you may use the Gate::inspect method to get the full authorization response returned by the gate:
+
+        //$response = Gate::inspect('edit-settings', $post);
+        //
+        //if ($response->allowed()) {
+        //    // The action is authorized...
+        //} else {
+        //    echo $response->message();
+        //}
+    }
+
+
 }
