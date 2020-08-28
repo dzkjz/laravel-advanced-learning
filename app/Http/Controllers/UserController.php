@@ -618,5 +618,6 @@ class UserController extends Controller
         if (Hash::needsRehash($hashed)) {
             $hashed = Hash::make('plain-text');
         }
+
     }
 }

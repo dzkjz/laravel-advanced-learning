@@ -130,3 +130,48 @@ Route::post('/post', function () {
 // In these situations, you may pass a class name to the middleware.
 // The class name will be used to determine which policy to use when authorizing the action:
 
+
+/*
+ * Sometimes you may wish to execute an Artisan command outside of the CLI.
+ * For example, you may wish to fire an Artisan command from a route or controller.
+ * You may use the call method on the Artisan facade to accomplish this.
+ * The call method accepts either the command's name or class as the first argument,
+ * and an array of command parameters as the second argument.
+ * The exit code will be returned:
+ */
+Route::get('/foo2', function () {
+
+    $exitCode = \Illuminate\Support\Facades\Artisan::call('email:send', [
+        'user' => 1, '--queue' => 'default'
+    ]);
+    //
+    // Alternatively, you may pass the entire Artisan command to the call method as a string:
+    \Illuminate\Support\Facades\Artisan::call('email:send 1 --queue=default');
+
+
+    // Using the queue method on the Artisan facade,
+    // you may even queue Artisan commands so they are processed in the background by your queue workers.
+    // Before using this method, make sure you have configured your queue and are running a queue listener:
+
+    \Illuminate\Support\Facades\Artisan::queue('email:send', [
+        'user' => 1, '--queue' => 'default'
+    ]);
+
+    // You may also specify the connection or queue the Artisan command should be dispatched to:
+    \Illuminate\Support\Facades\Artisan::queue('email:send', [
+        'user' => 1, '--queue' => 'default'
+    ])->onConnection('redis')->onQueue('commands');
+
+    // If your command defines an option that accepts an array, you may pass an array of values to that option:
+    \Illuminate\Support\Facades\Artisan::call('email:send', [
+        'user' => 1, '--id' => [5, 13]
+    ]);
+
+    // If you need to specify the value of an option that does not accept string values,
+    // such as the --force flag on the migrate:refresh command, you should pass true or false:
+    \Illuminate\Support\Facades\Artisan::call('migrate:refresh', [
+        '--force' => true,
+    ]);
+
+
+});
