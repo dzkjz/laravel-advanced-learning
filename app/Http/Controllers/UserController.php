@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
@@ -26,6 +27,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\LazyCollection;
 use Illuminate\Support\Str;
 use Psy\VersionUpdater\GitHubChecker;
+use function Symfony\Component\String\s;
 
 class UserController extends Controller
 {
@@ -986,6 +988,88 @@ class UserController extends Controller
         Storage::deleteDirectory($directory);
 
 
+    }
+
+    public function httpTest(Request $request)
+    {
+
+        $response = Http::get('http://test.com');
+//        $response->body() : string;
+//        $response->json() : array|mixed;
+//        $response->status() : int;
+//        $response->ok() : bool;
+//        $response->successful() : bool;
+//        $response->failed() : bool;
+//        $response->serverError() : bool;
+//        $response->clientError() : bool;
+//        $response->header($header) : string;
+//        $response->headers() : array;
+
+        if ($name = $response['name']) {
+            return $name;
+        }
+
+        /** Get request data*/
+
+        $response = Http::post('http://test.com/users', [
+            'name' => 'Steve',
+            'role' => 'Network Administrator',
+        ]);
+
+
+        $response = Http::get('http://test.com/users',
+            // pass array key/value pair to get request url query string
+            [
+                'name' => 'Taylor',
+                'page' => 1,
+            ]
+        );
+
+
+        $photo = '';
+        $response = Http::withBody(
+            base64_encode($photo), 'image/jpeg'
+        )->post('http://test.com/photo');
+
+        $response->successful();
+        $response->failed();
+        $response->clientError();
+        $response->serverError();
+        $response->throw();// Throw an exception if a client or server error occurred...
+
+        // The throw method returns the response instance if no error occurred,
+        // allowing you to chain other operations onto the throw method:
+        $response->throw()->json();
+
+        Http::fake();
+
+        Http::fake(
+            [
+
+                'google.com/*'
+                // represent URL patterns that you wish to fake and their associated responses.
+                // The * character may be used as a wildcard character.
+                => Http::response('Hello World', 200, ['Headers']),
+                'github.com/*'
+                => Http::sequence()
+                    // specify that a single URL should return a series of fake responses in a specific order
+                    ->push('Hello World', 200)
+                    ->push(['foo' => 'bar'], 200)
+                    // If you would like to specify a default response that should be returned when a sequence is empty,
+                    // you may use the whenEmpty method
+                    ->whenEmpty(Http::response())
+                    ->pushStatus(404)
+                ,
+                '*'
+                // Stub a string response for all other endpoints...
+                => Http::response('Hello World', 200, ['Headers']),
+
+            ]
+        );
+
+
+
+        //其他的见 https://laravel.com/docs/7.x/http-client
 
     }
 }
