@@ -3,17 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Contract\UserRepositoryInterface;
+use App\Events\PodcastProcessed;
+use App\Models\Podcast;
 use App\Models\Post;
 use http\Client\Curl\User;
+use Illuminate\Cache\Events\CacheHit;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\LazyCollection;
+use Illuminate\Support\Str;
 use Psy\VersionUpdater\GitHubChecker;
 
 class UserController extends Controller
@@ -619,5 +628,230 @@ class UserController extends Controller
             $hashed = Hash::make('plain-text');
         }
 
+    }
+
+    public function cacheFacadeTest()
+    {
+        //取值
+        $value = Cache::get('key');
+
+        //指定驱动
+        $value = Cache::store('file')->get('foo');
+
+        Cache::store('redis')->put('bar', 'baz', 600);// 10 minutes
+
+        //默认值
+        Cache::get('key', 'default');
+
+        //闭包默认值
+        Cache::get('key', function () {
+            return DB::table('users')->get('id');
+        });
+
+
+        //判断有无
+        if (Cache::has('key')) {
+
+        }
+
+        //增加integer类型的
+        Cache::increment('key');
+        $amount = 10;
+        //步长
+        Cache::increment('key', $amount);
+
+        //减少integer类型的
+        Cache::decrement('key');
+        Cache::decrement('key', $amount);
+
+        $seconds = 600;//10 minutes
+
+        //取值，没有就用参数中的第三个闭包函数存到cache再取出
+        Cache::remember('users',
+            $seconds,//存储时间
+            //如果读取cache没有值，就会执行这个闭包，然后返回的值会存储到cache中并返回给Cache Remember方法的调用方
+            function () {
+                return DB::table('users')->get();
+            });
+
+        //同上，永久存储
+        Cache::rememberForever('users', function () {
+            return DB::table('users')->get();
+        });
+
+        //取出并删除 ，如果不存在会返回null
+        $value = Cache::pull('key');
+
+        //存值
+        Cache::put(
+            'key',
+            'value',
+            $seconds  //如果不传，就是默认永久存储
+        );
+
+        Cache::put(
+            'key',
+            'value',
+            now()->addMinutes(10)//或者传入DateTime实例设置过期时间
+        );
+
+
+        if (Cache::add('key', 'value', $seconds)) {
+            //Cache中不存在该item，添加成功
+        } else {
+            //Cache中已经存在对应item，添加失败
+        }
+
+        Cache::forever('key', 'value');//永久存储到cache中
+        //对于永久存储的，如果需要移除，请使用forget方法
+        //如果使用的时Memcached驱动，当cache存储的值超过了最大可存量【溢出】，forever存储的值也可能被移除掉。
+        Cache::forget('key');
+
+
+        //其他移除方式 给一个0或者负值到第三个参数
+        Cache::put('key', 'value', 0);
+        Cache::put('key', 'value', -5);
+
+
+        //Cache 清理，一次删除存储在Cache中的所有值
+        Cache::flush(); //使用的时候请三思，
+
+
+        /** Helper function 部分 */
+        \cache('key');
+        \cache(['key' => 'value'], $seconds);
+
+        \cache(['key' => 'value'], now()->addMinutes(10));
+
+
+        \cache()->remember('users', $seconds, function () {
+            return DB::table('users')->get();
+        });
+
+        /** Cache Tags 部分 */
+
+        $john = 'This is John';
+        // 通过tags方法读取tag过的Cache，并将John存到这个tag类的Cache中
+        Cache::tags(['people', 'artists'])->put('John', $john, $seconds);
+
+        $anne = "This is Anne";
+        Cache::tags(['people', 'authors'])->put('Anne', $anne, $seconds);
+
+        //获取值
+        $john = Cache::tags(['people', 'artists'])->get('John');
+
+        $anne = Cache::tags(['people', 'authors'])->get('anne');
+
+
+        //移除全部属于tag的Cache存储的值
+        Cache::tags(['people', 'authors'])->flush(); //people tag及 authors tag的值全部移除，即anne john都被移除
+
+        Cache::tags('authors')->flush(); //只移除了authors中的值，即anne
+
+
+        /** 原子锁 */
+
+
+        $lock = Cache::lock('foo', 10);
+
+        if ($lock->get()) {
+            // lock acquire for 10s ..锁定10秒
+            //
+            $lock->release();//释放
+        }
+
+
+        Cache::lock('foo')->get(function () {
+            //锁定
+
+            //闭包执行完成自动释放锁
+        });
+
+        //如果等待进入锁 等得太久，可以考虑设置一个最大等待时间
+        //获取锁超时的话，会抛出 Illuminate\Contracts\Cache\LockTimeoutException 异常
+
+        $lock = Cache::lock('foo', 10);
+
+        try {
+            $lock->block(5);
+
+            //获取锁等待5秒之后的操作逻辑...
+
+
+        } catch (LockTimeoutException $e) {
+            //获取锁超时失败
+        } finally {
+            optional($lock)->release();
+        }
+
+
+        Cache::lock('foo', 10)->block(5, function () {
+            //获取锁5秒之后的操作逻辑...
+        });
+
+        //跨进程管理原子锁，比如http请求的时候加锁，但是解锁是放在queue job或者某个事件触发逻辑之后。
+
+
+        $id = 1;
+        $podcast = Podcast::find($id);
+
+        $lock = Cache::lock('foo', 120);
+
+        if ($result = $lock->get()) {
+            PodcastProcessed::dispatch($podcast, $lock->owner());
+        }
+
+        //无视锁的owner，强制解锁
+        Cache::lock('foo')->forceRelease();
+
+
+    }
+
+    public function collectionTest()
+    {
+
+        //toUpper宏已经写在AppServiceProvider中了。
+
+        $collection = collect(['first', 'seconde']);
+
+        $upper = $collection->toUpper();// ['FIRST', 'SECOND']
+
+
+        /** Lazy Collection */
+        $lazyCollection = LazyCollection::make(function () {
+            yield 1;
+            yield 2;
+            yield 3;
+        });
+
+        $lazyCollection->collect();
+
+        get_class($collection);
+        // 'Illuminate\Support\Collection'
+        $collection->all();
+        // [1,2,3]
+
+
+        /** Eloquent Model LazyCollection */
+        $users = \App\Models\User::cursor()->filter(function ($user) {
+            return $user->id > 500;
+        });
+
+        foreach ($users as $user) {
+            echo $user->id;
+        }
+
+
+        /** Create LazyCollection from file*/
+        $fDatas = LazyCollection::make(function () {
+            $handle = fopen('log.txt', 'r');
+            while (($line = fgets($handle)) !== false) {
+                yield $line;
+            }
+        });
+
+        foreach ($fDatas as $fData) {
+            echo $fData;
+        }
     }
 }

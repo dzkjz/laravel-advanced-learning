@@ -4,10 +4,12 @@ namespace App\Providers;
 
 use App\Extensions\MongoSessionHandler;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class AppServiceProvider extends ServiceProvider
@@ -108,6 +110,12 @@ class AppServiceProvider extends ServiceProvider
         // Whether it actually invalidates a missing or empty attribute is up to you.
 
 
+        //注册collection 宏 后面可以在一个collection实例上调用toUpper方法了。
+        Collection::macro('toUpper', function () {
+            return $this->map(function ($value) {
+                return Str::upper($value);
+            });
+        });
 
     }
 }
