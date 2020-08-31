@@ -11,6 +11,7 @@ use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Http\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\LazyCollection;
@@ -853,5 +855,137 @@ class UserController extends Controller
         foreach ($fDatas as $fData) {
             echo $fData;
         }
+    }
+
+    public function fileSystemTest(Request $request)
+    {
+        $fileContents = 'Test Content';
+        Storage::put('avatars/1', $fileContents);
+        Storage::disk('s3')->put('avatar/1', $fileContents);
+
+
+        $contents = Storage::get('file.jpg');
+
+        $exists = Storage::disk('s3')->exists('file.jpg');
+        $missing = Storage::disk('s3')->missing('file.jpg');
+
+        if ($fileContents) {
+            return Storage::download('file.jpg');
+        } elseif ($contents) {
+            $name = '';
+            $headers = '';
+            return Storage::download('file.jpg', $name, $headers);
+        }
+
+        $url = Storage::url('file.jpg');
+
+        $url = Storage::temporaryUrl(
+            'file.jpg',
+            now()->addMinutes(5)
+        );
+
+        $url = Storage::temporaryUrl(
+            'file.jpg',
+            now()->addMinutes(5),
+            ['ResponseContentType' => 'application/octet-stream']
+        );
+
+        $size = Storage::size('file.jpg');
+
+        $time = Storage::lastModified('file.jpg');
+
+        Storage::put('file.jpg', $contents);
+
+
+        Storage::putFile(
+            'photos',
+            new File('/path/to/photo')
+//            ,  'public'
+        );
+        Storage::putFileAs(
+            'photos',
+            new File('/path/to/photo')
+            , 'photo.jpg'
+//            , 'public'
+        );
+
+
+        Storage::prepend('file.log', 'Prepended Text');
+        Storage::append('file.log', 'Appended Text');
+
+
+        Storage::copy('old/file.jpg', 'new/file.jpg');
+        Storage::move('old/file.jpg', 'new/file.jpg');
+
+        /** File Upload*/
+
+
+        $path = $request->file('avatar')->store(
+            'avatars'
+//            , 's3' 指定disk
+        );
+        //同样作用
+
+        $path = Storage::putFile('avatars', $request->file('avatar'));
+
+
+        $path = $request
+            ->file('avatar')
+            ->storeAs(
+                'avatars',
+                $request->user()->id
+//            , 's3' 指定disk
+            );
+
+        $path = Storage::putFileAs(
+            'avatars',
+            $request->file('avatar'),
+            $request->user()->id
+        );
+
+
+        $name = $request->file('avatar')->getClientOriginalName();
+
+        $extension = $request->file('avatar')->extension();
+
+        /** Visibility */
+        Storage::put('file.jpg', $contents, 'public');
+
+        $visibility = Storage::getVisibility('file.jpg');
+
+        Storage::setVisibility('file.jpg', 'public');
+
+        $path = $request->file('avatar')
+            ->storePublicly(
+                'avatar',
+                's3'
+            );
+        $path = $request->file('avatar')
+            ->storePubliclyAs(
+                'avatars',
+                $request->user()->id,
+                's3'
+            );
+
+        Storage::delete('file.jpg');
+        Storage::delete(['file1.jpg', 'file2.jpg']);
+
+        Storage::disk('s3')->delete('folder_path/file_name.jpg');
+
+        $directory = '';
+
+        $files = Storage::files($directory);
+        $files = Storage::allFiles($directory);
+
+
+        $directories = Storage::directories($directory);
+        $directories = Storage::allDirectories($directory);
+
+        Storage::makeDirectory($directory);
+
+        Storage::deleteDirectory($directory);
+
+
+
     }
 }

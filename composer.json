@@ -15,7 +15,8 @@
         "laravel/framework": "^7.24",
         "laravel/tinker": "^2.0",
         "laravel/ui": "^2.2",
-        "predis/predis": "^1.1"
+        "predis/predis": "^1.1",
+        "spatie/flysystem-dropbox": "^1.2"
     },
     "require-dev": {
         "facade/ignition": "^2.0",

@@ -106,6 +106,9 @@
       <path value="$PROJECT_DIR$/vendor/symfony/psr-http-message-bridge" />
       <path value="$PROJECT_DIR$/vendor/laravel/ui" />
       <path value="$PROJECT_DIR$/vendor/predis/predis" />
+      <path value="$PROJECT_DIR$/vendor/spatie/dropbox-api" />
+      <path value="$PROJECT_DIR$/vendor/spatie/flysystem-dropbox" />
+      <path value="$PROJECT_DIR$/vendor/graham-campbell/guzzle-factory" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="7.2" />

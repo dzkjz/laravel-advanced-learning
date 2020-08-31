@@ -51,7 +51,7 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
         ],
 
@@ -65,6 +65,11 @@ return [
             'endpoint' => env('AWS_ENDPOINT'),
         ],
 
+        //自定义的 https://laravel.com/docs/7.x/filesystem#custom-filesystems
+        'dropbox' => [
+            'driver' => 'dropbox',
+            'authorization_token' => env('AUTHORIZATION_TOKEN'),
+        ]
     ],
 
     /*

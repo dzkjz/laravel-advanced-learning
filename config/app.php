@@ -179,6 +179,7 @@ return [
         \App\Providers\BillServiceProvider::class,
 
         \App\Providers\ViewServiceProvider::class,
+        App\Providers\DropboxServiceProvider::class,
     ],
 
     /*
