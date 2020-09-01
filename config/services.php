@@ -30,4 +30,9 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    /**notification*/
+    'nexmo' => [
+        'sms_from' => '1555566666', // The sms_from option is the phone number that your SMS messages will be sent from.
+        // You should generate a phone number for your application in the Nexmo control panel.
+    ],
 ];

@@ -10,6 +10,7 @@ use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Podcast;
 use App\Models\Post;
+use App\Notifications\InvoicesPaid;
 use http\Client\Curl\User;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Contracts\Cache\LockTimeoutException;
@@ -25,6 +26,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
@@ -1133,6 +1135,63 @@ class UserController extends Controller
         Mail::to($request->user())->send(new OrderShipped($order));
 
         //
+
+    }
+
+    public function notificationTest(Request $request)
+    {
+        $user = $request->user();
+        $invoice = Invoice::find(1);
+
+        $user->notify(new \App\Notifications\InvoicePaid($invoice));
+
+
+        $users = \App\Models\User::all();
+        Notification::send($users, new \App\Notifications\InvoicePaid($invoice));
+
+
+        $when = now()->addMinutes(10);
+        $user->notify((new \App\Notifications\InvoicePaid($invoice))->delay($when));
+
+
+        Notification::route('mail', 'taylor@example.com')
+            ->route('nexmo', '55555555')
+            ->route('slack', 'https://hooks.slack.com/services/...')
+            ->notify(new \App\Notifications\InvoicePaid($invoice));
+
+
+        foreach ($user->notifications as $notification) {
+            //依照created_at整理顺序输出
+            echo $notification->type;
+            echo $notification->data;
+        }
+
+
+        //获取未读notifications
+        foreach ($user->unreadNotifications as $notification) {
+            //依照created_at整理顺序输出
+            echo $notification->type;
+            echo $notification->data;
+            //mark
+            $notification->markAsRead();
+        }
+
+        //一次标注完已读
+        $user->unreadNotifications->markAsRead();
+
+        //标为已读
+        $user->unreadNotifications()->update(['read_at' => now()]);
+
+        //删除
+        $user->notifications()->delete();
+
+
+        /** Localization */
+
+        $user->notify(new \App\Notifications\InvoicePaid($invoice))->locale('es');
+
+        //批量
+        Notification::locale('es')->send($users, new InvoicesPaid($invoice));
 
     }
 }

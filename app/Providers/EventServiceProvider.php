@@ -31,7 +31,10 @@ class EventServiceProvider extends ServiceProvider
         'App\Events\OrderShipped' =>
             [
                 'App\Listeners\SendShipmentNotification',
-            ]
+            ],
+        'Illuminate\Notifications\Events\NotificationSent' => [
+            'App\Listeners\LogNotification',
+        ]
 
     ];
 

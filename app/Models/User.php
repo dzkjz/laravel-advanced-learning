@@ -67,4 +67,47 @@ class User extends Authenticatable implements MustVerifyEmail, HasLocalePreferen
     {
         return $this->locale;
     }
+
+    /**
+     * 一般发送Notification的时候，会检查模型类里面的email属性值
+     * 不过也可以使用本方法自定义，其返回值就是邮箱地址，或者一个邮箱地址做key=>名称做value的数组
+     * @param $notification
+     * @return array|mixed
+     */
+    public function routeNotificationForMail($notification)
+    {
+        return $this->email_address;
+        return [$this->email_address => $this->name];
+    }
+
+    /**
+     * If you would like to customize which channels a notifiable entity receives its broadcast notifications on,
+     * you may define a receivesBroadcastNotificationsOn method on the notifiable entity:
+     * @return string
+     */
+    public function receivesBroadcastNotificationsOn()
+    {
+        return 'users' . $this->id;
+    }
+
+    /**
+     * To route Nexmo notifications to the proper phone number,
+     * define a routeNotificationForNexmo method on your notifiable entity:
+     * @param $notification
+     * @return mixed
+     */
+    public function routeNotificationForNexmo($notification)
+    {
+        return $this->phone_number;
+    }
+
+    /**
+     * Like routing SMS Notifications,
+     * you should implement the routeNotificationForShortcode method on your notifiable model.
+     * @param $notification
+     */
+    public function routeNotificationForShortcode($notification)
+    {
+        return $this->phone_number;
+    }
 }
