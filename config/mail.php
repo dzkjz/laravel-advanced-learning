@@ -107,4 +107,13 @@ return [
         ],
     ],
 
+
+    /**
+     * Reply to
+     */
+    'reply_to' => [
+        'address' => 'example@example.com',
+        'name' => 'App Name',
+    ],
+
 ];

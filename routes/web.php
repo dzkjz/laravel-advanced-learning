@@ -175,3 +175,9 @@ Route::get('/foo2', function () {
 
 
 });
+
+
+Route::get('mailable', function () {
+    $invoice = \App\Models\Invoice::find(1);
+    return new \App\Mail\InvoicePaid($invoice);//可以直接get请求，用于查看邮件样式，对于编辑邮件样式很有用
+});

@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Contract\UserRepositoryInterface;
 use App\Events\PodcastProcessed;
+use App\Mail\InvoicePaid;
+use App\Mail\OrderShipped;
+use App\Models\Invoice;
+use App\Models\Order;
 use App\Models\Podcast;
 use App\Models\Post;
 use http\Client\Curl\User;
@@ -20,6 +24,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
@@ -1068,8 +1073,66 @@ class UserController extends Controller
         );
 
 
-
         //其他的见 https://laravel.com/docs/7.x/http-client
+
+
+    }
+
+    public function mailTest(Request $request, $orderId)
+    {
+        $order = Order::findOrFail($orderId);
+
+        Mail::to($request->user())//确保user里面有email和name属性，或to方法里面直接设置email
+//            ->cc($request->user())
+//            ->bcc($request->user())
+        ->send(new OrderShipped($order));
+
+
+        foreach (['taylor@example.com', 'dries@example.com'] as $recipient) {
+            Mail::to($recipient)->send(new OrderShipped($order));//邮件必须每次都new一个实例，因为地址会直接加到实例中，每次都不一样
+            Mail::mailer('postmark')//使用非default 的mailer，【mail.php配置文件中配置】
+            ->to($recipient)
+                ->send(new OrderShipped($order));
+        }
+
+        /** Queue Mail*/
+        Mail::to($request->user())
+            ->cc('')
+            ->bcc('')
+            ->queue(new OrderShipped($order));
+
+        // 延迟queue发送
+        $when = now()->addMinutes(10);
+
+        Mail::to($request->user())
+            ->later($when, new OrderShipped($order));
+
+        //指定queue
+        $message = (new OrderShipped($order))
+            ->onConnection('sqs')
+            ->onQueue('emails');
+
+        Mail::to($request->user())
+            ->queue($message);
+
+//        默认就要queue发送的邮件Mailable，请实现ShouldQueue
+
+        /** Mailable 渲染*/
+
+        $invoice = Invoice::find(1);
+
+        (new InvoicePaid($invoice))->render();//不发出邮件，但是渲染出来，可以用于测试效果 返回值是string
+
+
+        /** Localizing Mailable */
+
+        Mail::to($request->user())->locale('es')->send(new OrderShipped($order));
+
+
+        //如果user默认实现了HasLocalePreference接口，那么发送邮件的时候，就会使用User的locale属性设置locale
+        Mail::to($request->user())->send(new OrderShipped($order));
+
+        //
 
     }
 }

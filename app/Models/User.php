@@ -4,10 +4,11 @@ namespace App\Models;
 
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable implements MustVerifyEmail, HasLocalePreference
 {
 
     use Notifiable;
@@ -56,5 +57,14 @@ class User extends Authenticatable implements MustVerifyEmail
     {
 //        Within this method, you may send the notification using any notification class you choose.
         $this->notify(new ResetPasswordNotification($token));
+    }
+
+    /***
+     * Get the user's preferred locale.
+     * @return mixed|string|null
+     */
+    public function preferredLocale()
+    {
+        return $this->locale;
     }
 }
