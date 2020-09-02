@@ -150,6 +150,6 @@ class AppServiceProvider extends ServiceProvider
             while (DB::transactionLevel() > 0) {
                 DB::rollBack();
             }
-        })
+        });
     }
 }
