@@ -1194,4 +1194,9 @@ class UserController extends Controller
         Notification::locale('es')->send($users, new InvoicesPaid($invoice));
 
     }
+
+    public function queueTest(Request $request)
+    {
+
+    }
 }

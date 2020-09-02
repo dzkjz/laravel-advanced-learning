@@ -3,14 +3,21 @@
 namespace App\Providers;
 
 use App\Extensions\MongoSessionHandler;
+use App\Jobs\ProcessPodcast;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use MongoDB\Driver\Query;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,7 +28,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->bindMethod(ProcessPodcast::class, '@handle', function ($job, $app) {
+            return $job->handle($app->make(AudioProcessor::class));
+        });
     }
 
     /**
@@ -117,5 +126,30 @@ class AppServiceProvider extends ServiceProvider
             });
         });
 
+
+        //Queue Job failed event triggered
+        Queue::failing(function (JobFailed $event) {
+            // $event->connectionName
+            // $event->job
+            // $event->exception
+        });
+
+
+        Queue::before(function (JobProcessing $event) {
+            // $event->connectionName
+            // $event->job
+            // $event->job->payload()
+        });
+        Queue::after(function (JobProcessed $event) {
+            // $event->connectionName
+            // $event->job
+            // $event->job->payload()
+        });
+
+        Queue::looping(function () {
+            while (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+        })
     }
 }
