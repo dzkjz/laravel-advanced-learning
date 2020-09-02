@@ -151,5 +151,13 @@ class AppServiceProvider extends ServiceProvider
                 DB::rollBack();
             }
         });
+
+
+        DB::listen(function ($query) {
+            // $query->sql;
+            // $query->bindings;
+            // $query->time;
+        });
+
     }
 }

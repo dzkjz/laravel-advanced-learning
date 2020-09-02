@@ -1199,4 +1199,65 @@ class UserController extends Controller
     {
 
     }
+
+    public function databaseTest(Request $request)
+    {
+        $users = DB::connection('mysql')->select('');
+
+        //获取底层的pdo实例
+        $pdo = DB::connection()->getPdo();
+
+        // The select method will always return an array of results.
+        // Each result within the array will be a PHP stdClass object,
+        // allowing you to access the values of the results:
+        $users = DB::select('select * from users where active = ?', [1]);
+        if ($users) {
+            return view('user.index', ['users' => $users]);
+        }
+
+        foreach ($users as $user) {
+            echo $user->name;
+        }
+
+        //Naming bindings
+
+        $results = DB::select('select * from users where id =:id', ['id' => 1]);
+
+
+        //insert
+        DB::insert('insert into users(id,name) values(?,?)', [1, 'Dayle']);
+
+        //update
+        $affected = DB::update('update users set votes = 100 where name= ? ', ['John']);
+
+
+        //delete
+        $deleted = DB::delete('delete from users'); // the number of rows affected will be returned:
+
+
+        //statement
+        // Some database statements do not return any value.
+        // For these types of operations, you may use the statement method on the DB facade:
+        DB::statement('drop table users');
+
+
+        //Database Transactions 数据库事务，闭包内事务如果执行异常，会自动回滚处理，如果成功，事务就会自动完成执行
+        DB::transaction(function () {
+            DB::table('users')->update(['votes' => 1]);
+            DB::table('posts')->delete();
+        });
+
+
+        DB::transaction(function () {
+            DB::table('users')->update(['votes' => 1]);
+            DB::table('posts')->delete();
+        }, 5);//第二个参数作用，如果出现死锁，会最大尝试5次，超次就会抛异常
+
+        //手动启动事务执行
+        DB::beginTransaction();
+        //手动回滚
+        DB::rollBack();
+        //手动提交事务
+        DB::commit();
+    }
 }
