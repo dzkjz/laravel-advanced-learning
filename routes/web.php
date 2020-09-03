@@ -187,3 +187,63 @@ Route::get('mail-notification', function () {
     return (new \App\Notifications\InvoicePaid($invoice))
         ->toMail($invoice->user);
 });//可以直接get请求，用于预览notification效果；
+
+Route::get('users', function () {
+    $users = \App\Models\User::paginate(15);
+
+    $users->withPath('custom/url');
+    // The withPath method allows you to customize the URI used by the paginator when generating links.
+    // For example, if you want the paginator to generate links like http://example.com/custom/url?page=N,
+    // you should pass custom/url to the withPath method;
+
+    // You may append to the query string of pagination links using the appends method.
+    // For example, to append sort=votes to each pagination link, you should make the following call to appends:
+    $users->appends(['sort' => 'votes'])->links();
+
+
+    // If you wish to append all current query string values to the pagination links
+    // you may use the withQueryString method:
+    $users->withQueryString()->links();
+
+
+    // If you wish to append a "hash fragment" to the paginator's URLs,
+    // you may use the fragment method.
+    // For example, to append #foo to the end of each pagination link,
+    // make the following call to the fragment method:
+    $users->fragment('foo')->links();
+
+
+    // You may control how many additional links are displayed on each side of the paginator's URL "window".
+    // By default, 3 links are displayed on each side of the primary paginator links.
+    // However, you may control this number using the onEachSide method:
+    $users->onEachSide(5)->links();
+
+
+    //controller返回结果，或者route闭包直接返回paginate结果的，会自动转换为json格式，
+    // 包括数据： include meta information such as total, current_page, last_page, and more.
+
+//    如：
+    //{
+    //   "total": 50,
+    //   "per_page": 15,
+    //   "current_page": 1,
+    //   "last_page": 4,
+    //   "first_page_url": "http://laravel.app?page=1",
+    //   "last_page_url": "http://laravel.app?page=4",
+    //   "next_page_url": "http://laravel.app?page=2",
+    //   "prev_page_url": null,
+    //   "path": "http://laravel.app",
+    //   "from": 1,
+    //   "to": 15,
+    //   "data":[
+    //        {
+    //            // Result Object
+    //        },
+    //        {
+    //            // Result Object
+    //        }
+    //   ]
+    //}
+
+
+});

@@ -1389,4 +1389,35 @@ class UserController extends Controller
 
 
     }
+
+    public function paginationTest(Request $request)
+    {
+
+        $users = DB::table('users')->paginate(15);
+        if ($users) {
+            return view('user.index', ['users' => $users]);
+        }
+        //分页数据对于groupBy方法结果不太支持【目前】，如果确有需要，请自己实现
+
+        $users = DB::table('users')->simplePaginate(15);//前端只需要后一页，前一页的链接数据，而不是分页结果里每一页的链接地址数据
+
+
+        $users = \App\Models\User::paginate(15);
+
+        $users = \App\Models\User::where('votes', '>', 100)->paginate(15);
+
+        $users = \App\Models\User::where('votes', '>', 100)->simplePaginate(15);
+
+
+        //自定义分页器
+        // Illuminate\Pagination\Paginator[对应simplePaginate方法]
+        // or
+        // Illuminate\Pagination\LengthAwarePaginator【对应有paginate方法】
+
+
+
+
+
+
+    }
 }

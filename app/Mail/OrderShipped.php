@@ -37,6 +37,6 @@ class OrderShipped extends Mailable implements
     {
         //$this->theme=''; 单独对本mailable的css进行自定义指定，如果需要全局 请在mail.php中的theme设置项目进行设置
 
-        return $this->markdown('=emails.orders.shipped');
+        return $this->markdown('emails.orders.shipped');
     }
 }

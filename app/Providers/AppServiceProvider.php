@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Extensions\MongoSessionHandler;
 use App\Jobs\ProcessPodcast;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
@@ -158,6 +159,16 @@ class AppServiceProvider extends ServiceProvider
             // $query->bindings;
             // $query->time;
         });
+
+
+        Paginator::defaultView('view-name');
+
+        Paginator::defaultSimpleView('view-name');
+
+//        Using Tailwind
+
+        Paginator::useTailwind();
+
 
     }
 }
