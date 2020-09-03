@@ -16,6 +16,7 @@ use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -28,6 +29,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -1415,7 +1417,17 @@ class UserController extends Controller
         // Illuminate\Pagination\LengthAwarePaginator【对应有paginate方法】
 
 
+    }
 
+    public function migrationTest(Request $request)
+    {
+        if (Schema::hasTable('users')) {
+
+        }
+
+        if (Schema::hasColumn('users', 'email')) {
+
+        }
 
 
 
