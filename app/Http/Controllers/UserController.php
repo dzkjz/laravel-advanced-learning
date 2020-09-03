@@ -6,10 +6,12 @@ use App\Contract\UserRepositoryInterface;
 use App\Events\PodcastProcessed;
 use App\Mail\InvoicePaid;
 use App\Mail\OrderShipped;
+use App\Models\Flight;
 use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Podcast;
 use App\Models\Post;
+use App\Models\User;
 use App\Notifications\InvoicesPaid;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Encryption\DecryptException;
@@ -1469,7 +1471,160 @@ class UserController extends Controller
 
         // pub sub 命令 可以于一个指定信道监听获取消息
         // 可以从其他应用发消息，甚至使用其他的编程语言 可以在进程、应用之间通信
-        
+
+
+    }
+
+    public function eloquentTest(Request $request)
+    {
+
+
+        // The Eloquent all method will return all of the results in the model's table
+        $flights = Flight::all();
+        foreach ($flights as $flight) {
+            echo $flight->name;
+        }
+
+        // Since Eloquent models are query builders,
+        // you should review all of the methods available on the query builder.
+        // You may use any of these methods in your Eloquent queries.
+
+        //  Since each Eloquent model serves as a query builder,
+        // you may also add constraints to queries, and then use the get method to retrieve the results:
+        $flights = Flight::where('active', 1)
+            ->orderBy('name', 'desc')
+            ->take(10)
+            ->get();
+
+
+        // You can refresh models using the fresh and refresh methods.
+        // The fresh method will re-retrieve the model from the database.
+        // The existing model instance will not be affected:
+        $flight = Flight::where('number', 'FR 900')->first();
+        $freshFlight = $flight->fresh();
+
+
+        $flight = Flight::where('number', 'FR 900')->first();
+        $flight->number = 'FR 456';
+
+        // The refresh method will re-hydrate the existing model using fresh data from the database.
+        $flight->refresh();
+        // In addition, all of its loaded relationships will be refreshed as well:
+        $flight->number; //"FR 900"
+
+
+        // For Eloquent methods like all and get which retrieve multiple results,
+        // an instance of Illuminate\Database\Eloquent\Collection will be returned.
+
+
+        //所以可以使用collection的方法
+        $flights = $flights->reject(function ($flight) {
+            return $flight->cancelled;
+        });
+
+        //可以loop
+        foreach ($flights as $flight) {
+            echo $flight->name;
+        }
+
+        // If you need to process thousands of Eloquent records, use the chunk command.
+        // The chunk method will retrieve a "chunk" of Eloquent models,
+        // feeding them to a given Closure for processing.
+        // Using the chunk method will conserve memory when working with large result sets:
+
+        Flight::chuck(
+            200, //The first argument passed to the method is the number of records you wish to receive per "chunk".
+            function (
+                $flights //A database query will be executed to retrieve each chunk of records passed to the Closure.
+            ) {
+                foreach ($flights as $flight) {
+                    //
+                }
+            }//The Closure passed as the second argument will be called for each chunk that is retrieved from the database.
+        );
+
+        //游标方法允许您使用游标遍历数据库记录，该游标方法将仅执行单个查询。 当处理大量数据时，可以使用cursor方法大大减少您的内存使用量：
+
+        foreach (Flight::where('foo', 'bar')->cursor() as $flight) {
+            //
+        }
+        //游标方法返回的是一个LazyCollection实例，允许使用典型Laravel集合中可用的许多集合方法，而一次仅将一个模型加载到内存中：
+        //就是一次虽然只有一个模型，但是依然可以对其使用属于集合的方法
+        $users = User::cursor()->filter(function ($user) {
+            return $user->id > 500;
+        });
+        foreach ($users as $user) {
+            echo $user->id;
+        }
+
+
+    }
+
+    public function collectionsTest()
+    {
+        $users = User::all();
+        // contains  This method accepts a primary key or a model instance:
+        // The contains method may be used to determine if a given model instance is contained by the collection.
+        $users->contains(1);
+        $users->contains(User::query()->find(1));
+
+        // diff The diff method returns all of the models that are not present in the given collection:
+        $users = $users->diff(User::query()->whereIn('id', [1, 2, 3])->get());
+
+        //except The except method returns all of the models that do not have the given primary keys:
+        $users = $users->except([1, 2]);
+
+
+        // The find method finds a model that has a given primary key.
+        // If $key is a model instance, find will attempt to return a model matching the primary key.
+        // If $key is an array of keys, find will return all models which match the $keys using whereIn():
+        $users = $users->find(1);
+
+        // The fresh method retrieves a fresh instance of each model in the collection from the database.
+        // In addition, any specified relationships will be eager loaded:
+        $freshUsers = $users->fresh();
+        $freshUsers = $users->fresh('comments');
+
+
+        // The intersect method returns all of the models that are also present in the given collection:
+        $users = $users->intersect(User::query()->whereIn('id', [1, 2, 3])->get());
+
+
+        // The load method eager loads the given relationships for all models in the collection:
+        $users->load('comments', 'posts');
+
+        $users->load('comments.author');
+
+        // loadMissing($relations)
+        // The loadMissing method eager loads the given
+        // relationships for all models in the collection if the relationships are not already loaded:
+
+        $users->loadMissing('comments', 'posts');
+        $users->loadMissing('comments.author');
+
+        // The modelKeys method returns the primary keys for all models in the collection:
+        $users->modelKeys();
+
+        // The makeVisible method makes attributes visible that are typically "hidden" on each model in the collection:
+        $users->makeVisible(['address', 'phone_number']);
+
+        // The makeHidden method hides attributes that are typically "visible" on each model in the collection:
+        $users->makeHidden(['address', 'phone_number']);
+
+        // The only method returns all of the models that have the given primary keys:
+        $users->only([1, 2, 3]);
+
+
+        // The toQuery method returns an Eloquent query builder instance containing a whereIn constraint
+        // on the collection model's primary keys:
+        $users->toQuery()->update([
+            'status' => 'Administrator',
+        ]);
+
+        // The unique method returns all of the unique models in the collection.
+        // Any models of the same type with the same primary key as another model in the collection are removed.
+        $users = $users->unique();
+
 
     }
 }
