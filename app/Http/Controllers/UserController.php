@@ -1260,4 +1260,133 @@ class UserController extends Controller
         //手动提交事务
         DB::commit();
     }
+
+    public function queryBuilderTest(Request $request)
+    {
+        $users = DB::table('users')->get();
+
+        if ($users) {
+            return view('user.index', ['users' => $users]);
+        }
+
+
+        //Retrieve single Row
+        $user = DB::table('users')->where('name', 'John')->first();
+        echo $user->name;
+
+        //Retrieve single row data's column value
+        $email = DB::table('users')->where('name', 'John')->value('email');
+
+        //Retrieve By ID
+        $user = DB::table('users')->find(3);
+
+
+        //Retrieve a list of column values
+        $titles = DB::table('roles')->pluck('title');
+        foreach ($titles as $title) {
+            echo $title;
+        }
+
+        //
+        $roles = DB::table('roles')->pluck('title', 'name');
+        foreach ($roles as $name => $title) {
+            echo $title;
+        }
+
+        //一次取一部分数据，分块获取，每一小块还可放进闭包里处理
+        DB::table('users')->orderBy('id')->chunk(100, function ($users) {
+            foreach ($users as $user) {
+                //
+            }
+        });
+
+        DB::table('users')->orderBy('id')->chunk(100, function ($users) {
+            //处理数据
+
+            return false;//返回false表示停止处理然后退出返回
+        });
+
+
+        //如果你需要在闭包里处理及更新数据，一遍更新，一边取，如果是按修改时间取，那你修改了的就一直是最新，就一直在修改这一段，
+        //这个时候，建议使用chunkById方法，会依据数据的primary key排序
+        DB::table('users')->where('active', false)
+            ->chunkById(100, function ($users) {
+                foreach ($users as $user) {
+                    DB::table('users')->where('id', $user->id)->update(['active' => true]);
+                }
+            });
+
+        //不过还需要注意，如果你的操作是增加或者删除数据，任何对primary key或者外键的修改，会影响chunk query结果。
+
+        /** Aggregates */
+        // count, max, min, avg, sum
+
+        $users = DB::table('users')->count();
+
+        $price = DB::table('orders')->max('price');
+
+        $price = DB::table('orders')
+            ->where('finalized', 1)
+            ->avg('price');
+
+        $exists = DB::table('orders')->where('finalized', 1)->exists();
+        $notExists = DB::table('orders')->where('finalized', 1)->doesntExist();
+
+        /** Selects */
+        $users = DB::table('users')->select('name', 'email as user_email')->get();
+
+        //唯一值
+        $users = DB::table('users')->distinct()->get();
+
+        //追加select限定
+        $query = DB::table('users')->select('name');
+        $users = $query->addSelect('age')->get();
+
+        //原生 表达式
+        $users = DB::table('users')
+            ->select(DB::raw('count(*) as user_count,status'))//原生语句会以字符串的形式注入到sql query种，一定要避免sql注入
+            ->where('status', '<>', 1)
+            ->groupBy('status')
+            ->get();
+
+        //selectRaw
+        $orders = DB::table('orders')
+            ->selectRaw('price * ? as price_with_tax', [1.0825])//接受第二个参数作为第一语句中'?'的绑定值
+            ->get();
+
+        DB::table('orders')
+            ->whereRaw('price > IF(state = "TX",?,100)', [200])
+            ->get();
+
+        DB::table('orders')->select('department', DB::raw('SUM(price) as total_sales'))
+            ->groupBy('department')
+            ->havingRaw('SUM(price)>?', [2500]) //haveRaw和orHavingRaw方法可用于将原始字符串设置为having子句的值
+            ->get();
+
+
+        //orderByRaw方法可用于将原始字符串设置为order by子句的值：
+        DB::table('orders')->orderByRaw('updated_at - created_at DESC')->get();
+
+        //groupByRaw方法可用于将原始字符串设置为group by子句的值：
+        DB::table('orders')->select('city', 'state')->groupByRaw('city,state')->get();
+
+
+        //Joins
+        //Unions
+        //Where Clauses
+        //Ordering, Grouping, Limit & Offset
+        //Conditional Clauses
+        $role = $request->input('role');
+        DB::table('users')
+            ->when($role, function ($query, $role) {
+                $query->where('role_id', $role);
+            })->get();
+        //Inserts
+        //Updates
+        //Deletes
+        //Pessimistic Locking
+        //Debugging
+
+
+    }
 }
