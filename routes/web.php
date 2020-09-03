@@ -247,3 +247,9 @@ Route::get('users', function () {
 
 
 });
+
+Route::get('publish', function () {
+    //Route logic...
+
+    \Illuminate\Support\Facades\Redis::publish('test-channel', json_encode(['foo' => 'bar']));
+});

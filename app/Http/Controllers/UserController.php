@@ -11,15 +11,10 @@ use App\Models\Order;
 use App\Models\Podcast;
 use App\Models\Post;
 use App\Notifications\InvoicesPaid;
-use http\Client\Curl\User;
-use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Encryption\DecryptException;
-use Illuminate\Database\Eloquent\Relations\Pivot;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\File;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Crypt;
@@ -28,15 +23,12 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\LazyCollection;
-use Illuminate\Support\Str;
-use Psy\VersionUpdater\GitHubChecker;
-use function Symfony\Component\String\s;
 
 class UserController extends Controller
 {
@@ -1430,6 +1422,54 @@ class UserController extends Controller
         }
 
 
+    }
+
+    public function redisTest(Request $request, $id)
+    {
+        $user = Redis::get('user:profile:' . $id);
+        if ($user) {
+            return view('user.profile', ['user' => $user]);
+        }
+
+
+        // Laravel uses magic methods to pass the commands to the Redis server,
+        // so pass the arguments the Redis command expects:
+        Redis::set('name', 'Taylor');
+
+        $values = Redis::lrange('names', 5, 10);
+
+        // Alternatively, you may also pass commands to the server using the command method,
+        // which accepts the name of the command as its first argument,
+        // and an array of values as its second argument:
+
+        $values = Redis::command('lrange', ['name', 5, 10]);
+
+        // You may get a Redis instance by calling the Redis::connection method:
+        // This will give you an instance of the default Redis server
+        $redis = Redis::connection();
+
+
+        // You may also pass the connection or cluster name to the connection method to
+        // get a specific server or cluster as defined in your Redis configuration:
+        $redis = Redis::connection('my-connection');
+
+
+        // Pipelining should be used when you need to send many commands to the server.
+        Redis::pipeline(
+        // The pipeline method accepts one argument: a Closure that receives a Redis instance.
+            function ($pipe) {
+                // You may issue all of your commands to this Redis instance and
+                // they will all be streamed to the server thus providing better performance:
+                for ($i = 0; $i < 1000; $i++) {
+                    $pipe->set("key:$i", $i);
+                }
+            });
+
+        // Laravel provides a convenient interface to the Redis publish and subscribe commands.
+
+        // pub sub 命令 可以于一个指定信道监听获取消息
+        // 可以从其他应用发消息，甚至使用其他的编程语言 可以在进程、应用之间通信
+        
 
     }
 }
