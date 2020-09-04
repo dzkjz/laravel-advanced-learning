@@ -22,4 +22,13 @@ class StudentController extends Controller
             ->created_at;//访问中间表的属性
         }
     }
+
+    public function getDishesOfStudent(Student $student)
+    {
+        $dishes = $student->dishes;
+
+        foreach ($dishes as $dish) {
+            echo $dish->name;
+        }
+    }
 }

@@ -38,4 +38,20 @@ class Teacher extends Model
             'id'//cars表的主键【最终模型对应的外键car_id的对应表cars的主键，这里是id】
         );
     }
+
+    /** 获取Teacher的图片
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
+     */
+    public function images()
+    {
+        return $this->morphMany(Image::class, 'imageable');//对应到images表中 imageable_id及imageable_type
+    }
+
+    /** 获取这个老师点的所有菜的菜名
+     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
+     */
+    public function dishes()
+    {
+        return $this->morphToMany(Dish::class, 'dishable');
+    }
 }

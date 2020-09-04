@@ -5,8 +5,11 @@ namespace App\Providers;
 use App\Events\UserDeleted;
 use App\Extensions\MongoSessionHandler;
 use App\Jobs\ProcessPodcast;
+use App\Models\Student;
+use App\Models\Teacher;
 use App\Models\User;
 use App\Observers\UserObserver;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
@@ -192,6 +195,21 @@ class AppServiceProvider extends ServiceProvider
         // In this example, we'll register the observer in the AppServiceProvider:
         User::observe(UserObserver::class); //模型使用observe方法，参数为对应的observer class
 
+
+        //自定义多态类型
+
+        // 默认情况下， Laravel 使用完全限定类名存储关联模型类型。
+        //在上面的一对多示例中， 因为 Image 可能从属于一个 Student 或一个 Teacher，默认的 imageable_type 就将分别是 App\Models\Student
+        // 或 App\Models\Teacher。
+        //不过，你可能希望数据库与应用的内部结构解耦。在这种情况下，可以定义一个 「morph 映射」 来通知 Eloquent 使用自定义名称代替对应的类名：
+
+        // 注意：在现有应用程序中添加「morph 映射」时，数据库中仍包含完全限定类的每个可变形 *_type 列值都需要转换为其「映射」名称。
+        Relation::morphMap(
+            [
+                'students'=>Student::class,
+                'teachers'=>Teacher::class,
+            ]
+        );
 
     }
 }
