@@ -1712,4 +1712,75 @@ class UserController extends Controller
 
         //闭包中返回的值，会被withoutEvents方法返回；
     }
+
+    public function accessorsTest()
+    {
+        $user = User::find(1);
+        $first_name = $user->first_name;//访问的是User模型里的getFirstNameAttribute 这个accessor存取器
+
+        if ($first_name) {
+            return $first_name;
+        }
+
+    }
+
+    public function mutatorTest()
+    {
+        $user = User::find(1);
+        $user->first_name = 'Sally';
+        //会调用setFirstNameAttribute mutator，最后就是'sally'值
+    }
+
+    public function castValueObject()
+    {
+        // When casting to value objects,
+        // any changes made to the value object will automatically be synced back to the model before the model is saved:
+        $user = User::find(1);
+        $user->address->lineOne = "Updated Address Value";
+        $user->save();
+    }
+
+    public function castTest()
+    {
+        $user = User::find(1);
+        $options = $user->options;//user的options属性存在数据库中是json格式，因为用了'options'=>'array' cast，会读取为array格式
+        $options['key'] = 'value';//array格式访问
+
+        $user->options = $options;//array格式值赋值给user模型的时候，会cast为json格式，
+        $user->save();
+    }
+
+    public function queryTimeCastingTest()
+    {
+        //查询取值过程 执行cast
+        $users = User::query()
+            ->select(
+                [
+                    'users.*',
+                    // The last_posted_at attribute on the results of this query will be a raw string.
+                    'last_posted_at' => Post::query()
+                        ->selectRaw('MAX(created_at)')
+                        ->whereColumn('user_id', 'users.id')
+                ]
+            )->get();
+
+
+        // It would be convenient if we could apply a date cast to this attribute when executing the query[last_posted_at].
+        // To accomplish this, we may use the withCasts method:
+
+        $users = User::query()
+            ->select(
+                [
+                    'users.*',
+                    'last_posted_at' => Post::query()->selectRaw('MAX(created_at)')
+                        ->whereColumn('user_id', 'users.id')
+                ]
+            )
+            ->withCasts(
+                [
+                    'last_posted_at' => 'datetime'
+                ]
+            )
+            ->get();
+    }
 }

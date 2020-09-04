@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\Json;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -23,6 +24,7 @@ class Flight extends Model
      * If you wish to use a non-incrementing or a non-numeric primary key
      * you must set the public $incrementing property on your model to false:
      */
+
     public $incrementing = false;
 
 
@@ -40,7 +42,7 @@ class Flight extends Model
      */
     public $timestamps = false;
 
-    /**
+    /**日期列的日期格式
      * If you need to customize the format of your timestamps, set the $dateFormat property on your model.
      * This property determines how date attributes are stored in the database,
      * as well as their format when the model is serialized to an array or JSON:
@@ -93,6 +95,28 @@ class Flight extends Model
      */
     protected $guarded = [];
 
+    /** 此属性中的model的attribute会自动转换为date 【数据为Carbon 实例】
+     * @var string[]
+     */
+    protected $dates = ['seen_at'];
+
+
+    /**
+     * The $casts property should be an array where the key is the name of the attribute being cast and
+     * the value is the type you wish to cast the column to.
+     * The supported cast types are:
+     * integer, real, float, double, decimal:<digits>, string,
+     * boolean, object, array, collection, date, datetime, and timestamp.
+     * When casting to decimal, you must define the number of digits (decimal:2).
+     * @var array
+     * Attributes that are null will not be cast.
+     * In addition, you should never define a cast (or an attribute) that has the same name as a relationship.
+     */
+    protected $casts = [
+        'is_admin' => 'boolean',
+        'options' => Json::class,
+    ];
+
     /**
      *   Create a new Eloquent Collection instance.
      * @param array $models
@@ -112,4 +136,5 @@ class Flight extends Model
     {
         return $this->hasMany(History::class);
     }
+
 }

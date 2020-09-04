@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Casts\Address;
+use App\Casts\Hash;
 use App\Events\UserDeleted;
 use App\Events\UserSaved;
+use App\Json;
 use App\Notifications\ResetPasswordNotification;
 use App\Scopes\AgeScope;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -42,6 +45,13 @@ class User extends Authenticatable implements MustVerifyEmail, HasLocalePreferen
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'address' => Address::class,
+        //对于可以传参数的cast，可以使用:字符，多个的可以用逗号
+        'secret' => Hash::class . ':sha256',//参数会传入Hash cast的构造函数
+        //也可以指定cast为 一个实现了 castable 接口的类
+        'families' => Json::class . ':argument',//当然可以用参数，会直接传给castUsing方法里面的那个类的构造函数，这里【Json没有构造函数】只是做个示例，
+        'options' => 'array',//值存储会序列化为json格式的，使用array cast会在取值时，json转为array，存值时，array转为json
+        'created_at' => 'datetime:Y-m-d',//使用datetime cast的可以指定格式，当序列化为json或者array的时候，很有用
     ];
 
     /**可以指定事件触发
@@ -170,4 +180,37 @@ class User extends Authenticatable implements MustVerifyEmail, HasLocalePreferen
         return $query->where('type', $type);
     }
 
+
+    /** 获取名字
+     * @param $value
+     * @return string
+     */
+    public function getFirstNameAttribute($value)
+    {
+        return ucfirst($value);//字符串首字母大写
+    }
+
+    public function getLastNameAttribute($value)
+    {
+        return ucfirst($value);
+    }
+
+    /** 返回计算值
+     * @return string
+     */
+    public function getFullNameAttribute()
+    {
+        return "{$this->first_name} {$this->last_name}";
+    }
+
+    /**设置 【设置值会最后存储到数据库中】就是lowercase的
+     * @param $value
+     */
+    public function setFirstNameAttribute($value)
+    {
+        // The mutator will receive the value that is being set on the attribute,
+        // allowing you to manipulate the value and
+        // set the manipulated value on the Eloquent model's internal $attributes property.
+        $this->attributes['first_name'] = strtolower($value);
+    }
 }
