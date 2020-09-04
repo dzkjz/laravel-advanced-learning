@@ -3,9 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Flight extends Model
 {
+    /**
+     * 支持软删除 [模型migration中也需要添加一个deleted_at列] $table->softDeletes();
+     * The SoftDeletes trait will automatically cast the deleted_at attribute to a DateTime / Carbon instance for you.
+     */
+    use SoftDeletes;
 
     public $table = 'flights';
 
@@ -71,6 +77,23 @@ class Flight extends Model
 
 
     /**
+     * 使用create方法可以一句代码保存新模型数据，该方法会返回新创建的模型实例，
+     * 但是在使用之前，请确保指定了模型上的fillable或guarded属性，所有的Eloquent
+     * 模型都是默认防范了批量属性赋值；
+     * 不能让用户传入的所有参数都被赋值到模型中去。
+     *
+     * @var string[]
+     */
+    protected $fillable = ['name'];//指定哪个模型属性可以被赋值
+
+
+    /**
+     * 数组中的值，表示不能被填充，如果为空，表示模型的所有属性都可以赋值
+     * @var array
+     */
+    protected $guarded = [];
+
+    /**
      *   Create a new Eloquent Collection instance.
      * @param array $models
      * @return CustomCollection|\Illuminate\Database\Eloquent\Collection
@@ -85,4 +108,8 @@ class Flight extends Model
         // you should override the newCollection method on a base model class that is extended by all of your models.
     }
 
+    public function history()
+    {
+        return $this->hasMany(History::class);
+    }
 }

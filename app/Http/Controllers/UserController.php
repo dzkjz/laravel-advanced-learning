@@ -13,8 +13,10 @@ use App\Models\Podcast;
 use App\Models\Post;
 use App\Models\User;
 use App\Notifications\InvoicesPaid;
+use App\Scopes\AgeScope;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -31,6 +33,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\LazyCollection;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 
 class UserController extends Controller
 {
@@ -1626,5 +1629,87 @@ class UserController extends Controller
         $users = $users->unique();
 
 
+    }
+
+    public function removingGlobalScope(Request $request)
+    {
+        //如果此条查询不需要用AgeScope全局作用域，请参考这:
+        User::withoutGlobalScope(AgeScope::class)->get();
+        //或者是闭包全局作用域
+        User::withoutGlobalScope('age')->get();
+
+
+        // Remove all of the global scopes...
+        User::withoutGlobalScopes()->get();
+
+        // Remove some of the global scopes...
+        User::withoutGlobalScopes([
+            FirstScope::class, SecondScope::class
+        ])->get();
+
+    }
+
+    public function utilizingLocalScope(Request $request)
+    {
+        $users =
+            User::popular() // scopePopular
+            ->active() // scopeActive
+            ->orderBy('create_at')
+                ->get();
+
+        //如果需要的同时取出两个scope的结果,请使用闭包回调
+
+        $users = User::popular()
+            ->orWhere(function (Builder $builder) {
+                $builder->active();
+            })->get();
+        //但是这个比较繁琐，laravel给了个简单的版本
+
+        $users = User::popular()
+            ->orWhere //注意不是方法是，属性式调用
+            ->active()
+            ->get();
+
+
+    }
+
+    /**动态作用域
+     * @param Request $request
+     */
+    public function utilizingDynamicScope(Request $request)
+    {
+
+        $users = User::ofType('admin')->get();
+    }
+
+    /**
+     * Sometimes you may need to determine if two models are the "same".
+     * The is method may be used to quickly verify two models have same primary key, table, and database connection:
+     */
+    public function compareModels()
+    {
+        $user = User::find(1);
+        $user_2 = User::find(2);
+        if ($user->is($user_2)) {
+            //
+        }
+    }
+
+    /** You may occasionally wish to temporarily "mute" all events fired by a model.
+     * You may achieve this using the withoutEvents method.
+     * The withoutEvents method accepts a Closure as its only argument.
+     * Any code executed within this Closure will not fire model events.
+     * For example, the following will fetch and delete an App\User instance without firing any model events.
+     * Any value returned by the given Closure will be returned by the withoutEvents method:
+     * @param Request $request
+     */
+    public function mutingEvents(Request $request)
+    {
+        $user = User::withoutEvents(function () {
+            User::findOrFail(1)->delete();
+            return User::find(2);
+        });
+
+        //闭包中返回的值，会被withoutEvents方法返回；
     }
 }

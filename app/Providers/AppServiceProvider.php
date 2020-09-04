@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use App\Events\UserDeleted;
 use App\Extensions\MongoSessionHandler;
 use App\Jobs\ProcessPodcast;
+use App\Models\User;
+use App\Observers\UserObserver;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
@@ -181,6 +184,14 @@ class AppServiceProvider extends ServiceProvider
         Schema::defaultStringLength(191);
         // Alternatively, you may enable the innodb_large_prefix option for your database.
         // Refer to your database's documentation for instructions on how to properly enable this option.
+
+
+        //注册观察者
+        // To register an observer, use the observe method on the model you wish to observe.
+        // You may register observers in the boot method of one of your service providers.
+        // In this example, we'll register the observer in the AppServiceProvider:
+        User::observe(UserObserver::class); //模型使用observe方法，参数为对应的observer class
+
 
     }
 }
