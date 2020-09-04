@@ -6,6 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class Student extends Model
 {
+
+    /**
+     * 当一个模型属 belongsTo 或者 belongsToMany 另一个模型时，
+     * 例如 Student 属于 Grade，有时更新子模型导致更新父模型时间戳非常有用。
+     * 例如，当 Student 模型被更新时，您要自动「触发」父级 Grade 模型的 updated_at 时间戳的更新。
+     * Eloquent 让它变得简单。
+     * 只要在子模型加一个包含关联名称的 touches 属性即可：
+     * @var string[]
+     */
+    protected $touches = ['grade'];
+
     public function phone()
     {
         return $this->hasOne(Phone::class, 'student_id', 'id');

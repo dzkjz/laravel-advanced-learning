@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Grade;
 use App\Models\Image;
+use App\Models\Phone;
 use App\Models\Student;
 use App\Models\Teacher;
 use Facade\Ignition\Tabs\Tab;
@@ -256,6 +257,158 @@ class TeacherController extends Controller
 
         // 嵌套延迟预加载 & morphTo 见官方文档
 
+
+    }
+
+    public function updateInsertTest()
+    {
+        /** 保存方法 */
+        $student = Student::find(1);
+        $phone = Phone::find(100);
+        $student->phone() // 我们并没有使用动态属性的方式访问 phone 关联。相反，我们调用 phone 方法来获得关联实例。
+        ->save($phone);// save 方法将自动添加适当的 student_id 值到 Phone 模型中。
+
+        // 如果你需要保存多个关联模型，你可以使用 saveMany 方法：
+        $student->phone()->saveMany([
+            $phone,
+            new Phone(['brand' => 'Samsung']),
+        ]);
+
+
+        // 递归保存模型和关联数据
+        //如果你想 save 你的模型及其所有关联数据，你可以使用 push 方法:
+        $student->teachers[0]->name = 'Jimmy Horton';
+        $student->teachers[0]->car->brand = 'Valkswagon';
+        $student->push();
+
+
+        /** 新增方法 */
+
+        $phone = $student->phone()
+            ->create(// create 方法。它接受一个属性数组，同时会创建模型并插入到数据库中
+                [
+                    'brand' => 'HTC',
+                ]
+            );
+        // save 方法和 create 方法的不同之处在于， save 方法接受一个完整的 Eloquent 模型实例，而 create 则接受普通的 PHP 数组:
+
+        // 你还可以使用 createMany 方法去创建多个关联模型：
+        $student->phone()
+            ->createMany(
+                [
+                    'brand' => 'Xiaomi',
+                ],
+                [
+                    'brand' => 'Oppo',
+                ]
+            );
+
+        // 你还可以使用 findOrNew、firstOrNew、firstOrCreate 和 updateOrCreate 方法来 创建和更新关系模型。
+
+
+        /** 更新 belongsTo 关联 */
+        $grade = Grade::find(1);
+        $student->teachers()->associate($grade);
+        $student->save();
+
+        // 当移除 belongsTo 关联时，可以使用 dissociate 方法。此方法会将关联外键设置为 null:
+        $student->dissociate($grade);
+        $student->save();
+
+        // 默认模型 【这个时定义在model类中的】
+        // belongsTo，hasOne，hasOneThrough 和 morphOne 关系允许你指定默认模型，当给定关系为 null 时，将会返回默认模型。
+        // 这种模式被称作 空对象模式 ，可以减少你代码中不必要的检查。
+        //在下面的例子中，如果学生没有找到班级， grade 关系会返回一个空的 App\Models\Grade 模型：
+        ///**
+        // * Get the grade of the student.
+        // */
+        //public function grade()
+        //{
+        //    return $this->belongsTo('App\Models\Grade')->withDefault();
+        //}
+
+        // 如果需要在默认模型里添加属性， 你可以传递数组或者回调方法到 withDefault 中：
+
+        //  return $this->belongsTo('App\Models\Grade')->withDefault([
+        //        'name' => 'new Class no name',
+        //    ]);
+
+        // 以及闭包式
+//       return $this->belongsTo('App\Models\Grade')->withDefault(function ($grade, $student) {
+//            $grade->name = new Class no name'.$student->name;
+//        });
+
+
+        /** 多对多关联 */
+
+        /**
+         * 附加 / 分离
+         */
+        // 给某个用户附加一个角色是通过向中间表插入一条记录实现的，可以使用 attach 方法完成该操作：
+        $teacher = Teacher::find(1);
+        $student->teachers()->attach($teacher->id);
+
+        // 在将关系附加到模型时，还可以传递一组要插入到中间表中的附加数据：
+        $student->teachers()->attach($teacher->id, ['updated_at' => now()->addMinutes(1)]);
+
+        // 当然，有时也需要移除用户的角色。可以使用 detach 移除多对多关联记录。
+        //detach 方法将会移除中间表对应的记录；但是这两个模型都将会保留在数据库中：
+
+        $student->teachers()->detach($teacher->id);
+
+        //移除所有
+        $student->teachers()->detach();
+
+        // 为了方便，attach 和 detach 也允许传递一个 ID 数组：
+        $student->teachers()->detach([1, 2, 3]);
+        $student->teachers()->attach([1 => ['updated_at' => now()->addMinutes(1)], 2, 3]);
+
+        // 你也可以使用 sync 方法构建多对多关联。
+        // sync 方法接收一个 ID 数组以替换中间表的记录。
+        // 中间表记录中，所有未在 ID 数组中的记录都将会被移除。
+        // 所以该操作结束后，只有给出数组的 ID 会被保留在中间表中：
+
+        $student->teachers()->sync([1, 3, 4, 5]);
+        //你也可以通过 ID 传递额外的附加数据到中间表：
+        $student->teachers()->sync([1 => ['updated_at' => now()->addMinutes(1)], 3, 4, 5]);
+
+        //如果你不想移除现有的 ID，可以使用 syncWithoutDetaching 方法：
+        $student->teachers()->syncWithoutDetaching([1, 2, 3]);
+
+        // 切换关联
+        // 如果给定的 ID 已被附加在中间表中，那么它将会被移除，
+        // 同样，如果给定的 ID 已被移除，它将会被附加：
+        $student->teachers()->toggle([1, 2, 5, 6]);
+
+
+        // 在中间表上保存额外的数据
+        Student::find(1)->roles()->save($teacher, ['expires' => now()->addMinutes(1440)]);
+
+
+        // 更新中间表记录
+
+        // 如果你需要在中间表中更新一条已存在的记录，可以使用 updateExistingPivot 。
+        // 此方法接收中间表的外键与要更新的数据数组进行更新：
+        $attributes = ['created_at' => now()->addMinutes(1)];
+        $student->teachers()->updateExistingPivot($teacher->id, $attributes);
+
+
+        /** 更新父级时间戳 */
+
+
+        // 当一个模型属 belongsTo 或者 belongsToMany 另一个模型时，
+        // 例如 Student 属于 Grade，有时更新子模型导致更新父模型时间戳非常有用。
+        // 例如，当 Student 模型被更新时，您要自动「触发」父级 Grade 模型的 updated_at 时间戳的更新。
+        // Eloquent 让它变得简单。
+        // 只要在子模型加一个包含关联名称的 touches 属性即可：
+
+
+        // 已在 Student 模型中添加好：     protected $touches = ['grade'];
+
+        // 现在，当你更新一个 Student 时，对应父级 Grade 模型的 updated_at 字段同时也会被更新，
+        // 使其更方便得知何时让一个 Grade 模型的缓存失效：
+        $student->name = 'John jr People';
+        $student->save();
 
 
     }
