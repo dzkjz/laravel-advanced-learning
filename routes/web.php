@@ -253,3 +253,7 @@ Route::get('publish', function () {
 
     \Illuminate\Support\Facades\Redis::publish('test-channel', json_encode(['foo' => 'bar']));
 });
+
+Route::get('users', function () {
+    return \App\Models\User::all();//会返回一个字符串，自动转换为json格式返回给前端
+});

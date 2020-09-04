@@ -1783,4 +1783,58 @@ class UserController extends Controller
             )
             ->get();
     }
+
+    public function serializingModels()
+    {
+        $user = User::query()->with('roles')->first();
+        if ($user) {
+            return $user->toArray();
+        }
+
+        $user = User::query()->first();
+        if ($user) {
+            // To convert only a model's attributes to an array
+            return $user->attributesToArray();
+        }
+
+        $users = User::all();
+        if ($users) {
+            $users->toArray();
+        }
+
+
+        if ($users) {
+            return $users->toJson();
+            return $users->toJson(JSON_PRETTY_PRINT);//指定json的格式
+            return (string)$users;//自动应用json方法
+        }
+
+        //任何的模型关联 返回到前端的值都自动转为json格式
+        // Also, though Eloquent relationship methods are defined using "camel case",
+        // a relationship's JSON attribute will be "snake case".
+
+        //暂时应用某属性为可见
+
+        if ($user) {
+            return $user->makeVisible('attribute')->toArray();
+        }
+
+        //暂时应用某属性为不可见
+        if ($user) {
+            return $user->makeHidden('attribute')->toArray();
+        }
+    }
+
+    public function appendingAtRunTime()
+    {
+        $user = User::find(1);
+        // You may instruct a single model instance to append attributes using the append method.
+        $user->append('is_admin')->toArray();
+
+        // Or, you may use the setAppends method to
+        // override the entire array of appended properties for a given model instance:
+        $user->setAppends(['is_admin'])->toArray();
+
+
+    }
 }

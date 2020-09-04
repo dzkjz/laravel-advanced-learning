@@ -31,11 +31,22 @@ class User extends Authenticatable implements MustVerifyEmail, HasLocalePreferen
 
     /**
      * The attributes that should be hidden for arrays.
-     *
+     * 返回的模型实例属性值，这属性里面的attribute都会被隐藏掉
+     * 如果需要隐藏的时候模型关联，请使用模型关联的方法的名字
      * @var array
      */
     protected $hidden = [
         'password', 'remember_token',
+    ];
+
+
+    /**
+     * 与上面hidden属性相对，这里的就是需要展示到返回出去的json值的白名单，未填入的，自动设置为hidden
+     * @var string[]
+     */
+    protected $visible = [
+        'first_name',
+        'last_name',
     ];
 
     /**
@@ -62,6 +73,14 @@ class User extends Authenticatable implements MustVerifyEmail, HasLocalePreferen
         'deleted' => UserDeleted::class,
         //定义了指向触发，就可以写监听器，handle这些事件了
     ];
+
+    /**
+     * user模型实例数据在返回出去被序列化为json格式后，如果需要追加值，可以先添加一个存取器【getIsAdminAttribute】计算出结果，然后
+     * 在$appends属性里面添加，这样就会在返回出去的json值里看到结果了，
+     * hidden visible属性对这里面的值同意有限定作用
+     * @var string[]
+     */
+    protected $appends = ['is_admin'];
 
     public function comments()
     {
@@ -213,4 +232,33 @@ class User extends Authenticatable implements MustVerifyEmail, HasLocalePreferen
         // set the manipulated value on the Eloquent model's internal $attributes property.
         $this->attributes['first_name'] = strtolower($value);
     }
+
+    public function getIsAdminAttribute()
+    {
+        return $this->attributes['admin'] === 'yes';
+    }
+
+    /**
+     * 自定义序列化的日期格式【不建议用这个方法】
+     *
+     * 如果所有的都一个格式，可以在$dateFormat属性里面配置
+     * 单独的可以在casts属性里面配置
+     *
+     * @param \DateTimeInterface $dateTime
+     * @return string
+     */
+    public function serializeDate(\DateTimeInterface $dateTime)
+    {
+        return $dateTime->format('Y-m-d');
+        //Customizing The Date Format Per Attribute
+        //You may customize the serialization format of individual
+        // Eloquent date attributes by specifying the date format in the cast declaration:
+        //
+        //protected $casts = [
+        //    'birthday' => 'date:Y-m-d',
+        //    'joined_at' => 'datetime:Y-m-d H:00',
+        //];
+    }
+
+
 }
