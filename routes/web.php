@@ -257,3 +257,11 @@ Route::get('publish', function () {
 Route::get('users', function () {
     return \App\Models\User::all();//会返回一个字符串，自动转换为json格式返回给前端
 });
+
+Route::get('/user', function () {
+    return (new \App\Http\Resources\User(\App\Models\User::find(1)))
+        ->response() // you may chain the response method onto the resource.
+        // This method will return an Illuminate\Http\JsonResponse instance,
+        // allowing you full control of the response's headers:
+        ->header('X-Value', 'True');
+});

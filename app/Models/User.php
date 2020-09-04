@@ -8,7 +8,7 @@ use App\Events\UserDeleted;
 use App\Events\UserSaved;
 use App\Json;
 use App\Notifications\ResetPasswordNotification;
-use App\Scopes\AgeScope;
+//use App\Scopes\AgeScope;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Builder;
@@ -157,25 +157,25 @@ class User extends Authenticatable implements MustVerifyEmail, HasLocalePreferen
      * To assign a global scope to a model,
      * you should override a given model's booted method
      */
-    public static function booted()
-    {
-        // and use the addGlobalScope method:
-        static::addGlobalScope(new AgeScope);
-        // After adding the scope, a query to User::all() will produce the following SQL:
-        // select * from `users` where `age` > 200
-
-        //闭包全局作用域
-        static::addGlobalScope('age', function (Builder $builder) {
-            $builder->where('age', '>', 200);
-        });
-
-        // Instead of using custom event classes,
-        // you may register Closures that execute when various model events are fired.
-        // 使用闭包，在created事件触发时，执行闭包调用
-        static::created(function ($user) {
-            //
-        });
-    }
+//    public static function booted()
+//    {
+//        // and use the addGlobalScope method:
+//        static::addGlobalScope(new AgeScope);
+//        // After adding the scope, a query to User::all() will produce the following SQL:
+//        // select * from `users` where `age` > 200
+//
+//        //闭包全局作用域
+//        static::addGlobalScope('age', function (Builder $builder) {
+//            $builder->where('age', '>', 200);
+//        });
+//
+//        // Instead of using custom event classes,
+//        // you may register Closures that execute when various model events are fired.
+//        // 使用闭包，在created事件触发时，执行闭包调用
+//        static::created(function ($user) {
+//            //
+//        });
+//    }
 
     public function scopePopular($query)
     {

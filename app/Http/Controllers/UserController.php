@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Contract\UserRepositoryInterface;
 use App\Events\PodcastProcessed;
+use App\Http\Resources\Users;
 use App\Mail\InvoicePaid;
 use App\Mail\OrderShipped;
 use App\Models\Flight;
@@ -13,7 +14,7 @@ use App\Models\Podcast;
 use App\Models\Post;
 use App\Models\User;
 use App\Notifications\InvoicesPaid;
-use App\Scopes\AgeScope;
+//use App\Scopes\AgeScope;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Query\Builder;
@@ -1631,23 +1632,23 @@ class UserController extends Controller
 
     }
 
-    public function removingGlobalScope(Request $request)
-    {
-        //如果此条查询不需要用AgeScope全局作用域，请参考这:
-        User::withoutGlobalScope(AgeScope::class)->get();
-        //或者是闭包全局作用域
-        User::withoutGlobalScope('age')->get();
-
-
-        // Remove all of the global scopes...
-        User::withoutGlobalScopes()->get();
-
-        // Remove some of the global scopes...
-        User::withoutGlobalScopes([
-            FirstScope::class, SecondScope::class
-        ])->get();
-
-    }
+//    public function removingGlobalScope(Request $request)
+//    {
+//        //如果此条查询不需要用AgeScope全局作用域，请参考这:
+//        User::withoutGlobalScope(AgeScope::class)->get();
+//        //或者是闭包全局作用域
+//        User::withoutGlobalScope('age')->get();
+//
+//
+//        // Remove all of the global scopes...
+//        User::withoutGlobalScopes()->get();
+//
+//        // Remove some of the global scopes...
+//        User::withoutGlobalScopes([
+//            FirstScope::class, SecondScope::class
+//        ])->get();
+//
+//    }
 
     public function utilizingLocalScope(Request $request)
     {
@@ -1836,5 +1837,25 @@ class UserController extends Controller
         $user->setAppends(['is_admin'])->toArray();
 
 
+    }
+
+    public function resourceTest()
+    {
+        $user = User::find(1);
+        if ($user) {
+            return \App\Http\Resources\User::make($user);
+        }
+
+        $users = User::all();
+
+        if ($users) {
+            return \App\Http\Resources\User::collection($users);
+        }
+        //上面返回的数据只会有users中的属性或者你自己添加的其他值，但是不会包含users这个collection的meta数据
+
+        //如果需要该collection的meta数据，请使用实现了ResourceCollection的Resource：
+        if ($user) {
+            return Users::collection(User::all());
+        }
     }
 }
