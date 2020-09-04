@@ -6,6 +6,7 @@ use App\Models\Grade;
 use App\Models\Image;
 use App\Models\Student;
 use App\Models\Teacher;
+use Facade\Ignition\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -174,6 +175,87 @@ class TeacherController extends Controller
         }]);
 
         echo $student->phones_count;
+
+
+    }
+
+    public function eagerLoading()
+    {
+        // 当以属性方式访问 Eloquent 关联时，关联数据「懒加载」。
+        //这意味着直到第一次访问属性时关联数据才会被真实加载。
+
+        //有这样一个查询
+        //如果数据表里有25个teacher
+        $teachers = Teacher::all();
+        //第一个查询
+        foreach ($teachers as $teacher) {
+            //循环25次执行查询
+            $teacher->car->brand; // 直到第一次访问属性时关联数据才会被真实加载。
+        }
+        //一共执行1+25次查询 即N+1【N个结果+1】
+
+
+        //但是如果我们使用预加载
+        $teachers = Teacher::with('car')->get();
+        //第一次查询teachers
+        //select * from teachers
+        //第二次据[teachers ids]查询relations 【只有 2 个查询】
+        //select * from cars where id in (1, 2, 3, 4, 5, ...)
+
+        //下面无查询，只有迭代输出结果
+
+        foreach ($teachers as $teacher) {
+            echo $teacher->car->brand;
+        }
+
+        //预加载多个关联
+        $teachers = Teacher::with(['car', 'students'])->get();
+
+        //嵌套预加载
+        $teachers = Teacher::with('students.phones')->get();
+
+        // 嵌套预加载 morphTo 关联 太复杂 不过 参照该格式会用即可
+
+
+        // 预加载指定列
+        //并不是总需要获取关系的每一列。在这种情况下，Eloquent 允许你为关联指定想要获取的列：
+        $teachers = Teacher::with('students:id,name')  //注意：在使用这个特性时，一定要在要获取的列的列表中包含 id 列。
+        ->get();
+
+
+        //为预加载添加约束 【仅仅预加载那些name里包含Jimmy%的students关联数据】
+        $teachers = Teacher::with(['students' => function (Builder $query) {
+            $query->where('name', 'like', 'Jimmy%');
+        }])->get();
+
+        $teachers = Teacher::with(['students' => function (Builder $query) {
+            // 调用其它的 查询构造器 方法进一步自定义预加载操作：
+            $query->orderBy('created_at', 'desc');
+            // 注意：在约束预加载时，不能使用 limit 和 take 查询构造器方法。
+        }])->get();
+
+        //延迟预加载
+
+        $teachers = Teacher::all();
+        if ($teacher) {
+            $teachers->load('students');
+        }
+
+        // 如果你想要在渴求式加载的查询语句中进行条件约束，你可以通过数组的形式去加载，键为对应的关联关系，值为 Closure 闭包函数，
+        //该闭包的参数为一个查询实例：
+
+        if ($teacher) {
+            $teachers->load(['students' => function (Builder $query) {
+                $query->orderBy('created_at', 'asc');
+            }]);
+        }
+        //如果希望加载还没有加载的关联关系时，你可以使用 loadMissing 方法：
+        if ($teachers) {
+            $teachers->loadMissing('students');
+        }
+
+        // 嵌套延迟预加载 & morphTo 见官方文档
+
 
 
     }

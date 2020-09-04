@@ -6,6 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Grade extends Model
 {
+    /** 默认预加载
+     * 有时可能希望在查询模型时始终加载某些关联。
+     * 为此，你可以在模型上定义 $with 属性：
+     * @var string[]
+     *
+     * 如果你想从单个查询的 $with 属性中删除一个预加载，你可以使用 without 方法：
+     * $grades = Grade::without('students')->get();
+     */
+    protected $with = ['students'];
+
     public function students()
     {
         // By convention, Eloquent will take the "snake case" name of the owning model and suffix it with _id.
