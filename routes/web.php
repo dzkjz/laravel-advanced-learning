@@ -265,3 +265,6 @@ Route::get('/user', function () {
         // allowing you full control of the response's headers:
         ->header('X-Value', 'True');
 });
+Route::get('phones', function () {
+
+});
